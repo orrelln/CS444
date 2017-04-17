@@ -8,7 +8,8 @@
 
 // Headers
 void *ProducerThread(void *item);
-bool isBufferFull();
+int isBufferFull();
+void interruptHandler(int);
 
 // Pthread vars
 pthread_mutex_t mutex;
@@ -22,7 +23,7 @@ typedef struct {
 } BufferItem;
 
 // Global Buffer
-const int BufferSize = 32
+const int BufferSize = 32;
 BufferItem bufferArr[BufferSize];
 int bufferIdx = 0;
 
@@ -57,7 +58,7 @@ void *ProducerThread(void *item) {
         while(1) {
                 // TODO: create buffer item
                 pthread_mutex_lock(&mutex);
-                if(isBufferFull) {
+                if(bufferIdx == BufferSize-1) {
                         pthread_cond_wait(&bufferFull, &mutex);
                 }
                 bufferIdx++;
@@ -71,13 +72,6 @@ void *ProducerThread(void *item) {
         return 0;
 }
 
-bool isBufferFull() {
-        if(bufferIdx == BufferSize-1) {
-                return true;
-        } else {
-                return false;
-        }
-}
 
 // Reference from http://cis.poly.edu/cs3224a/Code/ProducerConsumerUsingPthreads.c
 void interruptHandler (int sg) {
