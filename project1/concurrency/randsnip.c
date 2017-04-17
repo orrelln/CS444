@@ -1,4 +1,4 @@
-#include "mt199937ar.c"
+#include "mt19937ar.c"
 
 //global asm registers
 int eax, ebx, ecx, edx;

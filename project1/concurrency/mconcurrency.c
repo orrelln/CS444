@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <pthread.h>
 #include <stdbool.h>
+#include "randsnip.c"
 
 // Headers
 void *ProducerThread(void *item);
@@ -62,10 +63,18 @@ void *ProducerThread(void *item) {
                         pthread_cond_wait(&bufferFull, &mutex);
                 }
                 bufferIdx++;
+
+                BufferItem bItem;
+                bItem.consumerNum = randNum(1, 100);
+                bItem.randWait = randNum(2,9);
+
                 // Add buffer item here
-                // bufferArr[bufferIdx] = bufferitem here
+                bufferArr[bufferIdx] = bItem;
                 
-                printf("producing");
+                printf("producing buffer item num:%d wait:%d\n", 
+                                bItem.consumerNum, 
+                                bItem.randWait);
+
                 pthread_cond_signal(&bufferEmpty);
                 pthread_mutex_unlock(&mutex);
         }
@@ -75,6 +84,7 @@ void *ProducerThread(void *item) {
 
 // Reference from http://cis.poly.edu/cs3224a/Code/ProducerConsumerUsingPthreads.c
 void interruptHandler (int sg) {
+        printf("interrupt received, quitting\n");
         pthread_mutex_destroy(&mutex);
         pthread_cond_destroy(&bufferEmpty);
         pthread_cond_destroy(&bufferFull);
