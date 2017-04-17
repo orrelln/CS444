@@ -1,0 +1,150 @@
+     3	10:10	cd orabii/
+     4	10:10	mv alltests/ dominion/
+     5	10:10	cd alltests/
+     6	10:10	mv * ..
+     7	10:10	rm -rf alltests/
+     8	10:10	cd .. ..
+     9	10:10	cd ....
+    10	10:10	cd ./.
+    11	10:11	cd assignment4
+    12	10:11	vi Makefile
+    13	10:11	cp Makefile ..
+    14	10:11	mv Makefile assignment5
+    15	10:11	cp Makefile carcheun/
+    16	10:12	cp Makefile orabii/dominion/
+    17	10:12	cd carcheun/
+    18	10:12	mv Makefile dominion/
+    19	13:18	vi do
+    20	16:54	cd dominion/
+    21	16:54	vi bug1.c
+    22	17:18	vi BugsInTeammates.c
+    23	17:18	vi BugFixes.c
+    24	17:19	rm Makefile
+    25	17:26	cd carcheun/dominion/
+    26	17:27	cd ../..
+    27	17:27	cd orabii/dominion/
+    28	17:28	vi dominion.c
+    29	11:25	cd softengr2/
+    30	11:25	cd FinalProj/
+    31	11:25	cd URLValidator/
+    32	11:26	vi UrlValidatorTest.class
+    33	14:49	cd homework/
+    34	14:49	cd A6
+    35	0:33	cd assignment1
+    36	0:34	vi test2.sh
+    37	0:45	scp leemi.adventure.c /Users/WillMichael/Documents
+    38	0:46	scp leemi@flip.engr.oregonstate.edu:leemi.adventure.c /Users/WillMichael/Documents/
+    39	0:47	scp leemi@flip.engr.oregonstate.edu:/nfs/stak/students/l/leemi/opsys/leemi.adventure.c /Users/WillMichael/Documents/
+    40	0:47	scp leemi@flip.engr.oregonstate.edu:opsys/assigment2/leemi.adventure.c /Users/WillMichael/Documents/
+    41	0:47	scp leemi@flip.engr.oregonstate.edu:/opsys/assigment2/leemi.adventure.c /Users/WillMichael/Documents/
+    42	0:48	scp leemi@flip.engr.oregonstate.edu:/nfs/stak/students/l/leemi/opsys/assignment2/leemi.adventure.c /Users/WillMichael/Documents/
+    43	0:48	scp leemi@flip.engr.oregonstate.edu:/nfs/stak/students/l/leemi/opsys/assignment2/leemi.adventure.c /Users/WillMichael/
+    44	0:49	scp leemi@flip.engr.oregonstate.edu:/nfs/stak/students/l/leemi/opsys/assignment2/leemi.adventure.c ~/Users/WillMichael/
+    45	0:52	vi txt.txt
+    46	1:02	cd assignment2
+    47	1:02	vi leemi.adventure.c
+    48	11:15	cd opsys/
+    49	11:15	cd assignment5
+    50	11:15	vi mypython.py
+    51	11:15	cd assignment3new
+    52	11:28	vi smallsh.c
+    53	22:54	./server 30020
+    54	22:54	vi server
+    55	22:55	rm server
+    56	22:55	remove testserver
+    57	22:55	rm testserver
+    58	22:55	rm -rf testserver
+    59	21:47	gcc server.c -o server
+    60	21:47	server
+    61	21:47	server 30020
+    62	21:48	vi server.c
+    63	1:03	cd N
+    64	1:14	python3 chatserve.py 30020
+    65	21:31	cd Networking/
+    66	21:32	cd untitled\ folder/
+    67	21:32	gcc chatclient.c
+    68	21:32	a.out
+    69	21:36	rm -rf a.out
+    70	21:36	gcc -Wall chatclient.c
+    71	21:45	quit
+    72	15:31	cd Networking/project2/
+    73	15:32	cd final/
+    74	15:32	mv ftclient.py testing/
+    75	15:32	cd testing/
+    76	15:34	python3 ftclient.py 127.0.0.1 9123 -l 23412
+    77	15:37	cd Networking/project2/final/
+    78	15:37	python3 ftclient.py 9123 -l 21234
+    79	15:37	python3 ftclient.py 127.0.0.1 9123 -l 21234
+    80	15:39	python3 ftclient.py 127.0.0.1 7123 -l 21234
+    81	15:42	python3 ftclient.py 127.0.0.1 8123 -l 21234
+    82	15:49	python3 ftclient.py 127.0.0.1 8123 -l 21235
+    83	15:50	python3 ftclient.py 127.0.0.1 8000 -l 21235
+    84	15:50	python3 ftclient.py 127.0.0.1 8111 -l 21235
+    85	15:51	python3 ftclient.py 127.0.0.1 8123 -g test.txt 21235
+    86	15:51	python3 ftclient.py 127.0.0.1 8123 -g test.txt 21236
+    87	15:52	python3 ftclient.py 127.0.0.1 8111 -g test.txt 22236
+    88	15:53	python3 ftclient.py 127.0.0.1 8111 -g temp.txt 22236
+    89	15:53	vi temp.txt
+    90	15:53	python3 ftclient.py 127.0.0.1 8111 -g tempi1.txt 22236
+    91	15:56	vi ftserver.c
+    92	16:00	cd testing
+    93	16:00	python3 ftclient.py 127.0.0.1 8123 -l 21236
+    94	16:07	python3 ftclient.py 127.0.0.1 8124 -l 21236
+    95	16:07	python3 ftclient.py 127.0.0.1 8124 -g 21236
+    96	16:08	python3 ftclient.py 127.0.0.1 8124 -g test.txt 21236
+    97	16:08	python3 ftclient.py 127.0.0.1 8124 -g test1.txt 21236
+    98	16:17	q
+    99	16:17	rm -rf final/
+   100	16:18	cd test
+   101	16:18	vi testing
+   102	16:18	mkdir testing
+   103	16:18	mv ftclient.py testing
+   104	16:18	./server 8123
+   105	16:18	rm -rf server
+   106	16:19	s
+   107	16:23	gcc ftserver.c -o server
+   108	16:34	server 8000
+   109	16:35	vi test.txt
+   110	15:08	mkdir 12-07
+   111	15:11	chmod 12-07/ 777
+   112	15:12	chmod -R 12-07 777
+   113	15:12	chmod 777 12-07
+   114	15:14	git clone git://git.yoctoproject.org/linux-yocto-3.14
+   115	15:19	mv linux-yocto-3.14/ 12-07
+   116	15:19	mv .git 12-07
+   117	15:19	vi .git
+   118	15:19	git checkout v3.14.26
+   119	15:21	chmod thaia u+w 12-07
+   120	15:24	source /scratch/opt/environment-setup-i586-poky-linux
+   121	15:24	bash
+   122	15:27	groupadd 12-07
+   123	15:27	cd linux-yocto-3.14/
+   124	15:27	pwd
+   125	15:30	cp /scratch/spring2017/files/config-3.14.26-yocto-qemu .config
+   126	15:30	vi .config
+   127	15:32	make menuconfig
+   128	15:42	make -j4 all
+   129	12:03	cd /scratch/spring2017/
+   130	12:04	cd
+   131	12:04	cd bin
+   132	12:04	cd /scratch/bin
+   133	12:04	vi acl_open
+   134	12:05	cd spring2017
+   135	12:07	chmod 744 12-07
+   136	12:07	cd 12-07
+   137	12:07	cd 12-08
+   138	12:07	cd 12-10
+   139	12:07	ls -a
+   140	12:07	cd ..
+   141	12:08	acl_open
+   142	12:08	/scratch/bin/acl_open
+   143	12:11	/scratch/bin/acl_open 12-07 thaia
+   144	13:17	cd /scratch/2017
+   145	13:17	cd /scratch/spring2017
+   146	13:17	/scratch/bin/acl_open orelln
+   147	13:18	/scratch/bin/acl_open 12-07 orelln
+   148	13:19	/scratch/bin/acl_open 12-07 orrelln
+   150	13:23	exit
+   151	15:40	history
+   152	15:40	ls
+   153	15:41	history > os2Commands.txt
