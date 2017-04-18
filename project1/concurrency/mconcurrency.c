@@ -1,32 +1,52 @@
 // Concurrency 1: The Producer-Consumer Problem
+// used the following as reference:
+// http://www.dailyfreecode.com/code/solve-producer-consumer-problem-thread-2114.aspx
 #include <stdlib.h>
 #include <stdio.h>
 #include <pthread.h>
 #include <time.h>
 #include <stdbool.h>
+#include <signal.h>
+#include <unistd.h>
+#include "randsnip.c"
 
 // Headers
-void *ProducerThread(void *item);
-void *consumer();
-bool isBufferFull();
+void *ProducerThread();
+void *ConsumerThread();
+int isBufferFull();
+void interruptHandler(int);
 
-// Global Buffer
-BufferItem bufferArr[32];
+// Pthread vars
+pthread_mutex_t mutex;
+pthread_cond_t bufferNotEmpty = PTHREAD_COND_INITIALIZER;
+pthread_cond_t bufferNotFull = PTHREAD_COND_INITIALIZER;
 
 // Item in buffer should be a struct with 2 numbers
 typedef struct { 
-    int consumerNum;
-    int randWait;
+        int consumerNum;
+        int randWait;
 } BufferItem;
 
-pthread_cond_t BufferNotFull=PTHREAD_COND_INITIALIZER;
-pthread_cond_t BufferFull=PTHREAD_COND_INITIALIZER;
-pthread_cond_t BufferNotEmpty=PTHREAD_COND_INITIALIZER;
-pthread_cond_t BufferEmpty=PTHREAD_COND_INITIALIZER;
-pthread_mutex_t bufferId=PTHREAD_MUTEX_INITIALIZER;
+// Global Buffer
+int BufferSize = 32;
+BufferItem bufferArr[32];
+int bufferIdx = 0;
 
-int main(int argc, char *argv) {
 
+
+int main(int argc, char *argv[]) {
+        // Pthread identifier
+        pthread_t producerT;
+        pthread_t consumerT;
+        signal(SIGINT, interruptHandler);
+
+        // Create producer thread
+        pthread_create(&producerT, NULL, ProducerThread, NULL);
+        pthread_create(&consumerT, NULL, ConsumerThread, NULL);
+
+        // Join Threads
+        pthread_join(producerT, NULL);
+        pthread_join(consumerT, NULL);
 }
 
 
@@ -39,12 +59,40 @@ int main(int argc, char *argv) {
  * 
  * http://timmurphy.org/2010/05/04/pthreads-in-c-a-minimal-working-example/
  */
-void *ProducerThread(void *item) {
-    
+void *ProducerThread() {
+        while(1) {
+                // TODO: create buffer item
+                pthread_mutex_lock(&mutex);
+                if(bufferIdx == BufferSize-1) {
+                        pthread_cond_wait(&bufferNotFull, &mutex);
+                }
+                bufferIdx++;
+
+                BufferItem bItem;
+                bItem.consumerNum = randNum(1, 100);
+                bItem.randWait = randNum(2,9);
+
+                // Add buffer item here
+                bufferArr[bufferIdx] = bItem;
+                
+                printf("producing buffer item num:%d wait:%d\n", 
+                                bItem.consumerNum, 
+                                bItem.randWait);
+
+                pthread_cond_signal(&bufferNotEmpty);
+                pthread_mutex_unlock(&mutex);
+        }
+        return 0;
+}
 
 
-
-    return 0;
+// Reference from http://cis.poly.edu/cs3224a/Code/ProducerConsumerUsingPthreads.c
+void interruptHandler (int sg) {
+        printf("interrupt received, quitting\n");
+        pthread_mutex_destroy(&mutex);
+        pthread_cond_destroy(&bufferNotEmpty);
+        pthread_cond_destroy(&bufferNotFull);
+        exit(0);
 }
 
 
@@ -57,26 +105,26 @@ void *ProducerThread(void *item) {
  * -- If a producer thread has an item to put in the buffer while the buffer is
       full, it blocks until a consumer removes an item.
  */
-void *consumer() {
-    //struct BufferItem consumeN;
-    //struct BufferItem waitTime;
-    //fprintf("%d", BufferItem->consumerNum);
+void *ConsumerThread() {
+    while(1) {
+        // TODO: create buffer item
+        pthread_mutex_lock(&mutex);
+        if(bufferIdx == 0) {
+                pthread_cond_wait(&bufferNotEmpty, &mutex);
+        }
+        BufferItem bItem = bufferArr[bufferIdx];
+        bufferIdx--;
 
-    if (&bufferNotFull){
-        // Lock thread while removing item from buffer
-        pthread_mutex_lock(&bufferId);
-        // do thing
-        pthread_mutex_unlock(&bufferId);
-    }else if (&bufferEmpty){
-        // if buffer empty, wait until a "not empty" signal is sent
-        pthread_cond_wait(&bufferNotEmpty, &bufferId);
-    }else if (&bufferFull){
-        // if the buffer is full, lock and have consumer thread remove item
-        pthread_mutex_lock(&bufferId);
-        // Print first val
-        fprintf("Consumed: %d\n", consumeN); //<-- ??
-        pthread_mutex_unlock(&bufferId);
+        // TODO: Delete from array later?? 
+
+        // wait some time from randWait
+        sleep(bItem.randWait); 
+
+        printf("consuming buffer item num:%d\n", 
+                bItem.consumerNum);
+
         pthread_cond_signal(&bufferNotFull);
+        pthread_mutex_unlock(&mutex);
     }
+    return 0;
 }
-
