@@ -9,6 +9,7 @@
 #include <signal.h>
 #include <unistd.h>
 #include "randsnip.c"
+#define BufferSize 32
 
 // Headers
 void *ProducerThread();
@@ -17,7 +18,7 @@ int isBufferFull();
 void interruptHandler(int);
 
 // Pthread vars
-pthread_mutex_t mutex;
+pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t bufferNotEmpty = PTHREAD_COND_INITIALIZER;
 pthread_cond_t bufferNotFull = PTHREAD_COND_INITIALIZER;
 
@@ -28,8 +29,7 @@ typedef struct {
 } BufferItem;
 
 // Global Buffer
-int BufferSize = 32;
-BufferItem bufferArr[32];
+BufferItem bufferArr[BufferSize];
 int bufferIdx = 0;
 
 
@@ -75,9 +75,10 @@ void *ProducerThread() {
                 // Add buffer item here
                 bufferArr[bufferIdx] = bItem;
                 
-                printf("producing buffer item num:%d wait:%d\n", 
+                printf("producing buffer item num:%d wait:%d idx:%d\n", 
                                 bItem.consumerNum, 
-                                bItem.randWait);
+                                bItem.randWait,
+                                bufferIdx);
 
                 pthread_cond_signal(&bufferNotEmpty);
                 pthread_mutex_unlock(&mutex);
@@ -107,6 +108,7 @@ void interruptHandler (int sg) {
  */
 void *ConsumerThread() {
     while(1) {
+            printf("consuming----\n");
         // TODO: create buffer item
         pthread_mutex_lock(&mutex);
         if(bufferIdx == 0) {
