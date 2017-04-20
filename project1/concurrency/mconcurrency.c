@@ -23,7 +23,7 @@ pthread_cond_t bufferNotEmpty = PTHREAD_COND_INITIALIZER;
 pthread_cond_t bufferNotFull = PTHREAD_COND_INITIALIZER;
 
 // Item in buffer should be a struct with 2 numbers
-typedef struct { 
+typedef struct {
         int consumerNum;
         int randWait;
 } BufferItem;
@@ -56,7 +56,7 @@ int main(int argc, char *argv[]) {
  * Adds item to the buffer, while adding has exclusing access to buffer
  * if buffer is full, block until producer adds a new item
  * Post: item is added to buffer
- * 
+ *
  * http://timmurphy.org/2010/05/04/pthreads-in-c-a-minimal-working-example/
  */
 void *ProducerThread() {
@@ -74,9 +74,9 @@ void *ProducerThread() {
 
                 // Add buffer item here
                 bufferArr[bufferIdx] = bItem;
-                
-                printf("producing buffer item num:%d wait:%d idx:%d\n", 
-                                bItem.consumerNum, 
+
+                printf("producing buffer item num:%d wait:%d\n", 
+                                bItem.consumerNum,
                                 bItem.randWait,
                                 bufferIdx);
 
@@ -102,7 +102,7 @@ void interruptHandler (int sg) {
       in an inconsistent state. Therefore, threads must have exclusive access
       to the buffer
  * -- If a consumer thread arrives while the buffer is empty, it blocks until a
-      producer adds a new item. 
+      producer adds a new item.
  * -- If a producer thread has an item to put in the buffer while the buffer is
       full, it blocks until a consumer removes an item.
  */
@@ -117,12 +117,12 @@ void *ConsumerThread() {
         BufferItem bItem = bufferArr[bufferIdx];
         bufferIdx--;
 
-        // TODO: Delete from array later?? 
+        // TODO: Delete from array later??
 
         // wait some time from randWait
-        sleep(bItem.randWait); 
+        sleep(bItem.randWait);
 
-        printf("consuming buffer item num:%d\n", 
+        printf("consuming buffer item num:%d\n",
                 bItem.consumerNum);
 
         pthread_cond_signal(&bufferNotFull);
