@@ -33,7 +33,6 @@ BufferItem bufferArr[BufferSize];
 int bufferIdx = 0;
 
 
-
 int main(int argc, char *argv[]) {
         // Pthread identifier
         pthread_t producerT;
@@ -48,7 +47,6 @@ int main(int argc, char *argv[]) {
         pthread_join(producerT, NULL);
         pthread_join(consumerT, NULL);
 }
-
 
 
 /*
@@ -76,9 +74,8 @@ void *ProducerThread() {
                 bufferArr[bufferIdx] = bItem;
 
                 printf("producing buffer item num:%d wait:%d\n", 
-                                bItem.consumerNum,
-                                bItem.randWait,
-                                bufferIdx);
+                        bItem.consumerNum,
+                        bItem.randWait);
 
                 pthread_cond_signal(&bufferNotEmpty);
                 pthread_mutex_unlock(&mutex);
@@ -97,36 +94,25 @@ void interruptHandler (int sg) {
 }
 
 
-/* Requirements/constraints
- * -- While an item is being added to or removed from the buffer, the buffer is
-      in an inconsistent state. Therefore, threads must have exclusive access
-      to the buffer
- * -- If a consumer thread arrives while the buffer is empty, it blocks until a
-      producer adds a new item.
- * -- If a producer thread has an item to put in the buffer while the buffer is
-      full, it blocks until a consumer removes an item.
- */
 void *ConsumerThread() {
-    while(1) {
-            printf("consuming----\n");
-        // TODO: create buffer item
-        pthread_mutex_lock(&mutex);
-        if(bufferIdx == 0) {
-                pthread_cond_wait(&bufferNotEmpty, &mutex);
+        while(1) {
+                printf("consuming----\n");
+                // TODO: create buffer item
+                pthread_mutex_lock(&mutex);
+                if(bufferIdx == 0) {
+                        pthread_cond_wait(&bufferNotEmpty, &mutex);
+                }
+                BufferItem bItem = bufferArr[bufferIdx];
+                bufferIdx--;
+
+                // wait some time from randWait
+                sleep(bItem.randWait);
+
+                printf("consuming buffer item num:%d\n",
+                        bItem.consumerNum);
+
+                pthread_cond_signal(&bufferNotFull);
+                pthread_mutex_unlock(&mutex);
         }
-        BufferItem bItem = bufferArr[bufferIdx];
-        bufferIdx--;
-
-        // TODO: Delete from array later??
-
-        // wait some time from randWait
-        sleep(bItem.randWait);
-
-        printf("consuming buffer item num:%d\n",
-                bItem.consumerNum);
-
-        pthread_cond_signal(&bufferNotFull);
-        pthread_mutex_unlock(&mutex);
-    }
-    return 0;
+        return 0;
 }
