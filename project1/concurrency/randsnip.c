@@ -10,12 +10,13 @@ int randNum(int min, int max) {
 
     //set registers from the result of running opcode cpuid
     //even though ebx and ecx are never used, required for cpuid to work correctly
-    asm volatile("cpuid" : "=a"(eax), "=b"(ebx), "=c"(ecx), "=d"(edx) : "a"(eax));
+    __asm__ __volatile__("cpuid" : "=a"(eax), "=b"(ebx), "=c"(ecx), "=d"(edx) : "a"(eax));
 
     //http://stackoverflow.com/questions/8920840/a-function-to-check-if-the-nth-bit-is-set-in-a-byte
     //checks if 30th bit of ecx(rrdrand support) is set to 1
+    //https://hackage.haskell.org/package/crypto-random-0.0.9/src/cbits/rdrand.c
     if (1<<30 & ecx)
-        asm volatile("rdrand %0; setc %1" : "=r" (randVal), "=qm" (err));
+        __asm__ __volatile__("rdrand %0; setc %1" : "=r" (randVal), "=qm" (err));
     else
         randVal = (int)genrand_int32();
 
