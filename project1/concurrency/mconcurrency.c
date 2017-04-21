@@ -80,6 +80,9 @@ void *ProducerThread() {
                 // Add buffer item here
                 bufferArr[bufferIdx] = bItem;
 
+                //sleep for 3-7 seconds before producing
+                sleep(randNum(3,7));
+                
                 printf("producing buffer item num:%d wait:%d\n",
                         bItem.consumerNum,
                         bItem.randWait);
