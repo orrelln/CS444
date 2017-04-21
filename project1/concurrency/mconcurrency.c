@@ -9,7 +9,6 @@
 #include <signal.h>
 #include <unistd.h>
 #include "randsnip.c"
-#define BufferSize 32
 
 // Headers
 void *ProducerThread();
@@ -29,11 +28,19 @@ typedef struct {
 } BufferItem;
 
 // Global Buffer
-BufferItem bufferArr[BufferSize];
+BufferItem* bufferArr;
 int bufferIdx = 0;
-
+int BufferSize;
 
 int main(int argc, char *argv[]) {
+        if(argc != 2) {
+  	   	        fprintf(stderr, "usage: %s [number of threads]\n", argv[0]);
+  	   	        exit(1);
+  	    }
+        else {
+     		        BufferSize = atoi(argv[1]) + 1;
+  	   	        bufferArr = malloc(BufferSize * sizeof(BufferItem));
+  	    }
         // Pthread identifier
         pthread_t producerT;
         pthread_t consumerT;
@@ -73,7 +80,7 @@ void *ProducerThread() {
                 // Add buffer item here
                 bufferArr[bufferIdx] = bItem;
 
-                printf("producing buffer item num:%d wait:%d\n", 
+                printf("producing buffer item num:%d wait:%d\n",
                         bItem.consumerNum,
                         bItem.randWait);
 
@@ -96,7 +103,6 @@ void interruptHandler (int sg) {
 
 void *ConsumerThread() {
         while(1) {
-                printf("consuming----\n");
                 // TODO: create buffer item
                 pthread_mutex_lock(&mutex);
                 if(bufferIdx == 0) {
