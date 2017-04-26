@@ -1,0 +1,170 @@
+\documentclass[letterpaper, 10pt, notitlepage]{article}
+%% Language and font encodings
+\usepackage[english]{babel}
+\usepackage[utf8x]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{longtable}
+\usepackage{listings}
+\usepackage{courier}
+
+
+%% Sets page size and margins
+\usepackage[letterpaper, margin=0.75in]{geometry}
+
+%% Useful packages
+\makeindex
+
+\title{Project 1: Getting Acquainted}
+\author{Michael Lee, Nicholas Orrell, Aileen Thai \\ CS444, Spring 2017}
+\date{}
+
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+A linux kernel was built and run within a qemu VM. After setting up the project, we tackled the producer-consumer problem as an exercise in parallel programming. The pthread library was used to handle concurrency between the producer and consumer, allowing us to limit access to the buffer between the threads. Additionally, a function was written to select between using \texttt{rdrand} and \texttt{Mersenne Twister} to supplement random number generation on systems that do not support the asm instruction.
+\end{abstract}
+\clearpage
+
+\section{Introduction}
+The Yocto Project is an open source collaborative project that provides users with a complete embedded Linux development environment. For this first assignment, we’ve exported the kernel from the project to use as a basis for our own future development. 
+\newline \newline
+After creating a new source control repo on the class server to contain our code, we ran a qemu VM. We ensured that the Linux kernel would boot in this new environment by building a new instance [of the kernel] in the virtual machine. Following this initial setup, the next part of the assignment consisted of implementing a solution for the producer-consumer problem. There were several synchronization constraints that needed to be enforced in order to make the system work correctly. They are as follows:
+\begin{itemize}
+\item Give threads exclusive access to the buffer
+\item If the buffer is empty, block the consumer thread until the producer adds a new item
+\item If the buffer is full, block the producer thread until the consumer removes an item
+\end{itemize}
+With these rules in mind, we proceeded to solve the concurrency problem using the pthread library.
+
+\section{Setting up the Kernel}
+\subsection{Command List}
+These are the commands that we used to setup our Linux kernel in recitation/lab
+\begin{center}
+\begin{longtable} {|l | c|}
+\hline
+\bf Command \\ \hline
+mkdir 12-07 \\ \hline
+chmod 12-07/ 777 \\ \hline
+chmod -R 12-07 777 \\ \hline
+chmod 777 12-07 \\ \hline
+git clone git://git.yoctoproject.org/linux-yocto-3.14 \\ \hline
+mv linux-yocto-3.14/ 12-07 \\ \hline
+mv .git 12-07 \\ \hline
+vi .git \\ \hline
+git checkout v3.14.26 \\ \hline
+chmod thaia u+w 12-07 \\ \hline
+source /scratch/opt/environment-setup-i586-poky-linux \\ \hline
+bash \\ \hline
+groupadd 12-07 \\ \hline
+cd linux-yocto-3.14/ \\ \hline
+pwd \\ \hline
+cp /scratch/spring2017/files/config-3.14.26-yocto-qemu .config \\ \hline
+vi .config \\ \hline
+make menuconfig \\ \hline
+make -j4 all \\ \hline
+cd /scratch/spring2017 \\ \hline
+cd \\ \hline
+cd bin \\ \hline
+cd /scratch/bin \\ \hline
+vi acl\_open \\ \hline
+cd spring2017 \\ \hline
+chmod 744 12-07 \\ \hline
+cd 12-07 \\ \hline
+ls -a \\ \hline
+cd .. \\ \hline
+acl\_open \\ \hline
+/scratch/bin/acl\_open \\ \hline
+/scratch/bin/acl\_open 12-07 thaia \\ \hline
+cd /scratch/2017 \\ \hline
+cd /scratch/spring2017 \\ \hline
+/scratch/bin/acl\_open orelln \\ \hline
+/scratch/bin/acl\_open 12-07 orelln \\ \hline
+/scratch/bin/acl\_open 12-07 orrelln \\ \hline
+history > os2Commands.txt \\ \hline
+\end{longtable}
+\end{center}
+
+\subsection{Running The Kernel}
+In order to run the kernel with qemu, we had to first source the environment setup configuration script. Then I could run the long Qemu command on our assigned port 6706, which left our CPU halted. To start the kernel I opened up another terminal, sourced that same settings file and ran gdb with \$GDB. I connected to the assigned port with target remote 6707, and then 'continue' to start the kernel. From here everything was up and running, and I could log into the our system with the root login.
+
+\subsection{Qemu Flag Explanation}
+To run qemu, we used the command:
+\begin{lstlisting}
+$ qemu-system-i386 -gdb tcp::6707 -S -nographic -kernel bzImage-qemux86.bin -drive 
+file=core-image-lsb-sdk-qemux86.ext3,if=virtio -enable-kvm -net none -usb -localtime 
+--no-reboot --append "root=/dev/vda rw console=ttyS0 debug" 
+\end{lstlisting}
+Here's a breakdown of the flags: 
+\begin{itemize}
+	\item -gdb: Waits for gdb connection on port 6707.
+    \item -S: Provides native GDB support.
+    \item -nographic: Sets qemu to have no graphical output other than a simple command line application.
+    \item -kernel: Uses bzImage=qemux86.bin as the kernel image.
+    \item -drive: Defines a new drive with the disk image core-image-sdk-qemux86.ext with a virtio interface.
+    \item -enable-kvm: Enable KVM full virtualization support.
+    \item -net: Indicates that no network devices will be configured. 
+    \item -usb: Enables the USB drive.
+    \item -localtime: Sets system to local time.
+    \item --no-reboot:  Exit out instead of rebooting.
+    \item --append: Uses argument as kernel command line.
+\end{itemize}
+
+\section{Concurrency: Producer/Consumer}
+
+\subsection{Purpose}
+The purpose of this assignment was to give us a very basic introduction on multi-threaded programs. Multi-threading can greatly speed up the implementation of certain programs and is key to the function of efficient operating systems. It allows multi-functionality where certain tasks can proceed even when one is blocked.
+
+\subsection{Approach}
+Our group first met together to discuss the implementation of the assignment. We analyzed the problem into three main tasks: generating the random numbers with ASM, creating the producer, and creating the consumer. From here we divided it among our group members and researched how to accomplish each task.
+\\ \\
+Our discussion of the problem and our research led us to our solution: the producer and consumer both run on different threads, but they each need to have exclusive access to the buffer. This means that when the thread begins, they need to deadlock on with the same reference. In other words, the buffer can only be accessed by thread at a time. The other lock we need to perform is a conditional lock that tests whether or not our buffer is empty or full. This conditional lock only allows the producer to proceed when there is space in the buffer, and the consumer to consume when the buffer has items.
+
+\subsection{Testing}
+In order to test our program we ran the scenario multiple times activating the producer/consumer individually to make sure that the deadlock and conditional locks were both working as intended.
+
+\subsection{Learning}
+We learned how to write a basic multi-threading program and some general terminology, which will help us in our understanding of the function of operating systems.
+
+\subsection{Git Log}
+This is the Git Log of our concurrency producer/consumer implementation
+\begin{center}
+\begin{tabular} { |c|c|l|c|}
+    \hline
+\bf Author & \bf Date & \bf Message \\ \hline
+Nicholas Orrell & 2017-04-12 & Initial commit \\ \hline
+Nicholas Orrell & 2017-04-12 & added directory \\ \hline
+willmichael & 2017-04-17 & initial commit \\ \hline
+willmichael & 2017-04-17 & another init \\ \hline
+willmichael & 2017-04-17 & history piped into file for writeup later \\ \hline
+willmichael & 2017-04-17 & buffer commit \\ \hline
+willmichael & 2017-04-17 & compiles \\ \hline
+Nicholas Orrell & 2017-04-17 & Random number generation snippet \\ \hline
+Nicholas Orrell & 2017-04-17 & Merge branch `master' of https://github.com/orrelln/CS444 \\ \hline
+Nicholas Orrell & 2017-04-17 & Update README.md \\ \hline
+willmichael & 2017-04-17 & producer \\ \hline
+willmichael & 2017-04-17 & producer implementation \\ \hline
+willmichael & 2017-04-17 & Merge branch `master' of https://github.com/orrelln/CS444 \\ \hline
+willmichael & 2017-04-17 & finish producer \\ \hline
+Aileen & 2017-04-17 & Start work on consumer \\ \hline
+Aileen & 2017-04-17 & Consumer \\ \hline
+willmichael & 2017-04-17 & remove a.out \\ \hline
+willmichael & 2017-04-17 & FIX mutex lock \\ \hline
+Nicholas Orrell & 2017-04-20 & finalize mconcurrency.c and randsnip.c \\ \hline
+Nicholas Orrell & 2017-04-20 & finalize randsnip.c \\ \hline
+Aileen & 2017-04-20 & Fix spacing for ConsumerThread, remove extra arg in producer print stmt \\ \hline
+Nicholas Orrell & 2017-04-20 & command line args, check this \\ \hline
+Nicholas Orrell & 2017-04-20 & added producer sleep \\ \hline
+Nicholas Orrell & 2017-04-21 & final version randsnip.c \\\hline
+\end{tabular}
+\end{center}
+
+\subsection{Work Log}
+Nicholas Orrell: For this assignment, I handled the random number generation. This was quite easy as there was a snippet provided on the course website related to the cpuid. For the other rdrand asm, I found a useful c implementation and modified it to suit the program. After that, I wrote a function to implement the asm and Mersenne Twister. The other work I did was starting the LaTeX file, adding command line arguments, and debugging consumer and producer code.
+\newline \newline
+Aileen Thai: On this assignment, I did the initial work for the consumer thread. I'm a little slower than my group members, so it took me a bit longer to get acquainted with the code. Other work I did included writing the abstract and introduction for our LaTex document (as well as make minor grammar edits).
+\\ \\
+Michael Lee: For this assignment I worked on creating the producer thread, and I worked with Aileen to link up our producer and consumer parts in the end program. During recitation I executed the commands to set up our Linux Kernel, and followed the instructions to make sure we could run it. Finally, I added the sections to our initial latex file, added the concurrency writeup, and the two Log tables.
+
+\end{document}

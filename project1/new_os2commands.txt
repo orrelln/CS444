@@ -1,0 +1,38 @@
+mkdir 12-07 \\ \hline
+chmod 12-07/ 777 \\ \hline
+chmod -R 12-07 777 \\ \hline
+chmod 777 12-07 \\ \hline
+git clone git://git.yoctoproject.org/linux-yocto-3.14 \\ \hline
+mv linux-yocto-3.14/ 12-07 \\ \hline
+mv .git 12-07 \\ \hline
+vi .git \\ \hline
+git checkout v3.14.26 \\ \hline
+chmod thaia u+w 12-07 \\ \hline
+source /scratch/opt/environment-setup-i586-poky-linux \\ \hline
+bash \\ \hline
+groupadd 12-07 \\ \hline
+cd linux-yocto-3.14/ \\ \hline
+pwd \\ \hline
+cp /scratch/spring2017/files/config-3.14.26-yocto-qemu .config \\ \hline
+vi .config \\ \hline
+make menuconfig \\ \hline
+make -j4 all \\ \hline
+cd /scratch/spring2017 \\ \hline/
+cd \\ \hline
+cd bin \\ \hline
+cd /scratch/bin \\ \hline
+vi acl_open \\ \hline
+cd spring2017 \\ \hline
+chmod 744 12-07 \\ \hline
+cd 12-07 \\ \hline
+ls -a \\ \hline
+cd .. \\ \hline
+acl_open \\ \hline
+/scratch/bin/acl_open \\ \hline
+/scratch/bin/acl_open 12-07 thaia \\ \hline
+cd /scratch/2017 \\ \hline
+cd /scratch/spring2017 \\ \hline
+/scratch/bin/acl_open orelln \\ \hline
+/scratch/bin/acl_open 12-07 orelln \\ \hline
+/scratch/bin/acl_open 12-07 orrelln \\ \hline
+history > os2Commands.txt \\ \hline
