@@ -62,11 +62,11 @@ def main():
         forkList.append(fork(i))
     ### List of philosophers
     philoList = []
-    philoList.append(philo("test1", 1))
-    philoList.append(philo("test2", 2))
-    philoList.append(philo("test3", 3))
-    philoList.append(philo("test4", 4))
-    philoList.append(philo("test5", 5))
+    philoList.append(philo("Aristotle", 1))
+    philoList.append(philo("Plato", 2))
+    philoList.append(philo("Descartes", 3))
+    philoList.append(philo("Nietzsche", 4))
+    philoList.append(philo("Socrates", 5))
 
     philoList[0].print_info()
 
