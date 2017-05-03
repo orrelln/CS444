@@ -44,15 +44,18 @@ static void sstf_add_request(struct request_queue *q, struct request *rq)
         struct request *next, *prev;
 
         // assign next and prev
-        next = list_entry(nd->queue.next, struct request, queuelist);
-        prev = list_entry(nd->queue.prev, struct request, queuelist);
+        next = list_entry(nd.queue.next, struct request, queuelist);
+        prev = list_entry(nd.queue, struct request, queuelist);
         
         // compare sector of rq to our next element until we get where we should insert
         while ( blk_rq_sectors(rq) > blk_rq_sectors(next) ) {
-                prev = next
-                next = list_entry(next->queuelist.next, struct request, queuelist);
+            prev = next
+            next = list_entry(next->queuelist.next, struct request, queuelist);
+            // prev > next so we looped to circular 
+            if ( blk_rq_sectors(prev) >  blk_rq_sectors(next) ) {
+                break;
+            }
         }
-
         // Adds after prev and automatically finishes
         list_add(&rq->queuelist, &prev->queuelist);
     }
