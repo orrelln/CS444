@@ -10,6 +10,8 @@
 
 struct sstf_data {
 	struct list_head queue;
+
+        sector_t head;
 };
 
 static void sstf_merged_requests(struct request_queue *q, struct request *rq,
@@ -23,12 +25,13 @@ static int sstf_dispatch(struct request_queue *q, int force)
 	struct sstf_data *nd = q->elevator->elevator_data;
 
 	if (!list_empty(&nd->queue)) {
-		struct request *rq;
-		rq = list_entry(nd->queue.next, struct request, queuelist);
-		list_del_init(&rq->queuelist);
-		elv_dispatch_sort(q, rq);
-		return 1;
-	}
+		struct request *rq, *next, *prev;
+		next = list_entry(nd->queue.next, struct request, queuelist);
+		prev = list_entry(nd->queue, struct request, queuelist);
+                list_del_init(&rq->queuelist, &prev->queuelist);
+                elv_dispatch_sort(q, rq);
+                return 1;
+        }
 	return 0;
 }
 
@@ -100,6 +103,7 @@ static int sstf_init_queue(struct request_queue *q, struct elevator_type *e)
 		kobject_put(&eq->kobj);
 		return -ENOMEM;
 	}
+        nd->head = 0;
 	eq->elevator_data = nd;
 
 	INIT_LIST_HEAD(&nd->queue);
