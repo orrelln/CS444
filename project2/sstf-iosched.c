@@ -9,7 +9,7 @@
 #include <linux/init.h>
 
 struct sstf_data {
-	struct list_head queue;
+        struct list_head queue;
 
         sector_t head;
 };
@@ -25,10 +25,10 @@ static int sstf_dispatch(struct request_queue *q, int force)
 	struct sstf_data *nd = q->elevator->elevator_data;
 
 	if (!list_empty(&nd->queue)) {
-		struct request *rq, *next, *prev;
-		next = list_entry(nd->queue.next, struct request, queuelist);
-		prev = list_entry(nd->queue, struct request, queuelist);
-                list_del_init(&rq->queuelist, &prev->queuelist);
+		struct request *rq;
+		rq = list_entry(nd->queue, struct request, queuelist);
+                list_del_init(&rq->queuelist);
+                nd->head = blk_rq_pos(rq) + blk_rq_sectors(rq);
                 elv_dispatch_sort(q, rq);
                 return 1;
         }
@@ -38,12 +38,12 @@ static int sstf_dispatch(struct request_queue *q, int force)
 // Add req to queue
 static void sstf_add_request(struct request_queue *q, struct request *rq)
 {
-	struct sstf_data *nd = q->elevator->elevator_data;
+        struct sstf_data *nd = q->elevator->elevator_data;
     
-    // list is empty so just add to tail
-    if (list_empty(&nd->queue)) {
-        list_add(&rq->queuelist, &nd->queue);
-    } else { // list isnt empty so we need to search where to place
+        // list is empty so just add to tail
+        if (list_empty(&nd->queue)) {
+                list_add(&rq->queuelist, &nd->queue);
+        } else { // list isnt empty so we need to search where to place
         struct request *next, *prev;
 
         // assign next and prev
@@ -51,14 +51,15 @@ static void sstf_add_request(struct request_queue *q, struct request *rq)
         prev = list_entry(nd.queue, struct request, queuelist);
         
         // compare sector of rq to our next element until we get where we should insert
-        while ( blk_rq_sectors(rq) > blk_rq_sectors(next) ) {
-            prev = next
-            next = list_entry(next->queuelist.next, struct request, queuelist);
-            // prev > next so we looped to circular 
-            if ( blk_rq_sectors(prev) >  blk_rq_sectors(next) ) {
-                break;
-            }
+        while (blk_rq_sectors(rq) > blk_rq_sectors(next)) {
+                prev = next;
+                next = list_entry(next->queuelist.next, struct request, queuelist);
+                
+                // prev > next so we looped to circular 
+                if (blk_rq_sectors(prev) > blk_rq_sectors(next)) {
+                        break;
         }
+
         // Adds after prev and automatically finishes
         list_add(&rq->queuelist, &prev->queuelist);
     }
