@@ -38,6 +38,7 @@ static int sstf_dispatch(struct request_queue *q, int force)
 // Add req to queue
 static void sstf_add_request(struct request_queue *q, struct request *rq)
 {
+        printk(KERN_NOTICE "Adding request rq: %llu", blk_rq_pos(rq));
         struct sstf_data *nd = q->elevator->elevator_data;
     
         // list is empty so just add to tail
@@ -50,15 +51,19 @@ static void sstf_add_request(struct request_queue *q, struct request *rq)
         next = list_entry(nd.queue.next, struct request, queuelist);
         prev = next
         
+        print(KERN_NOTICE "iterating request list...");
         // compare sector of rq to our next element until we get where we should insert
-        while (blk_rq_sectors(rq) > blk_rq_sectors(next)) {
+        while (blk_rq_pos(rq) > blk_rq_pos(next)) {
+                print(KERN_NOTICE "list rq: %llu", blk_rq_pos(next));
                 prev = next;
                 next = list_entry(next->queuelist.next, struct request, queuelist);
                 
                 // prev > next so we looped to circular 
-                if (blk_rq_sectors(prev) > blk_rq_sectors(next)) {
+                if (blk_rq_pos(prev) > blk_rq_pos(next)) {
                         break;
         }
+
+        print(KERN_NOTICE "Adding request rq: %llu, after prev: %llu", blk_rq_pos(rq), blk_rq_pos(prev));
 
         // Adds after prev and automatically finishes
         list_add(&rq->queuelist, &prev->queuelist);
