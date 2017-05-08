@@ -29,6 +29,8 @@ static int sstf_dispatch(struct request_queue *q, int force)
 		rq = list_entry(nd->queue, struct request, queuelist);
                 list_del_init(&rq->queuelist);
                 nd->head = blk_rq_pos(rq) + blk_rq_sectors(rq);
+
+                printk(KERN_NOTICE "Dispatch request rq: %llu", blk_rq_pos(rq));
                 elv_dispatch_sort(q, rq);
                 return 1;
         }
