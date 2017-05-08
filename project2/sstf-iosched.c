@@ -61,6 +61,7 @@ static void sstf_add_request(struct request_queue *q, struct request *rq)
                 // prev > next so we looped to circular 
                 if (blk_rq_pos(prev) > blk_rq_pos(next)) {
                         break;
+                }
         }
 
         print(KERN_NOTICE "Adding request rq: %llu, after prev: %llu", blk_rq_pos(rq), blk_rq_pos(prev));
