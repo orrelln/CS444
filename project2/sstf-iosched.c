@@ -48,7 +48,7 @@ static void sstf_add_request(struct request_queue *q, struct request *rq)
 
         // assign next and prev
         next = list_entry(nd.queue.next, struct request, queuelist);
-        prev = list_entry(nd.queue, struct request, queuelist);
+        prev = next
         
         // compare sector of rq to our next element until we get where we should insert
         while (blk_rq_sectors(rq) > blk_rq_sectors(next)) {
