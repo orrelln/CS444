@@ -64,7 +64,9 @@ static void sstf_add_request(struct request_queue *q, struct request *rq)
                 }
         }
 
-        print(KERN_NOTICE "Adding request rq: %llu, after prev: %llu", blk_rq_pos(rq), blk_rq_pos(prev));
+        print(KERN_NOTICE "Adding request rq: %llu, after prev: %llu", 
+                        blk_rq_pos(rq),
+                        blk_rq_pos(prev));
 
         // Adds after prev and automatically finishes
         list_add(&rq->queuelist, &prev->queuelist);
