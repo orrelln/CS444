@@ -14,6 +14,20 @@ struct sstf_data {
         sector_t head;
 };
 
+void print_list(struct request_queue *q)
+{
+        struct sstf_data *nd = q->elevator->elevator_data;
+        struct list_head *cursor;
+        
+        printk(KERN_NOTICE "List State: ");
+        
+        list_for_each(cursor, &nd->queue) {
+                struct request *req = list_entry(cursor, struct request, queuelist);
+                printk("Item: %llu, ", blk_rq_pos(req));
+        }
+        printk("\n");
+}
+
 static void sstf_merged_requests(struct request_queue *q, struct request *rq,
 				 struct request *next)
 {
@@ -25,13 +39,21 @@ static int sstf_dispatch(struct request_queue *q, int force)
 	struct sstf_data *nd = q->elevator->elevator_data;
 
 	if (!list_empty(&nd->queue)) {
-		struct request *rq;
-		rq = list_entry(nd->queue, struct request, queuelist);
+                struct request *rq;
+
+                printk(KERN_NOTICE "BEFORE DISPATCH\n");
+                printk(KERN_NOTICE "HEAD: %llu\n", nd->head);
+                print_list(q);
+                rq = list_entry(nd->queue.next, struct request, queuelist);
                 list_del_init(&rq->queuelist);
                 nd->head = blk_rq_pos(rq) + blk_rq_sectors(rq);
 
-                printk(KERN_NOTICE "Dispatch request rq: %llu", blk_rq_pos(rq));
+                printk(KERN_NOTICE "Dispatchint rq: %llu\n", blk_rq_pos(rq));
                 elv_dispatch_sort(q, rq);
+                printk(KERN_NOTICE "AFTER DISPATCH\n");
+                print_list(q);
+                printk("\n");
+                
                 return 1;
         }
 	return 0;
@@ -40,9 +62,11 @@ static int sstf_dispatch(struct request_queue *q, int force)
 // Add req to queue
 static void sstf_add_request(struct request_queue *q, struct request *rq)
 {
-        printk(KERN_NOTICE "Adding request rq: %llu", blk_rq_pos(rq));
         struct sstf_data *nd = q->elevator->elevator_data;
-    
+        printk(KERN_NOTICE "BEFORE ADD\n");
+        print_list(q);
+
+        printk(KERN_NOTICE "Adding rq: %llu\n", blk_rq_pos(rq));
         // list is empty so just add to tail
         if (list_empty(&nd->queue)) {
                 list_add(&rq->queuelist, &nd->queue);
@@ -50,13 +74,13 @@ static void sstf_add_request(struct request_queue *q, struct request *rq)
         struct request *next, *prev;
 
         // assign next and prev
-        next = list_entry(nd.queue.next, struct request, queuelist);
-        prev = next
+        next = list_entry(nd->queue.next, struct request, queuelist);
+        prev = next;
         
-        print(KERN_NOTICE "iterating request list...");
+        /*printk(KERN_NOTICE "iterating request list...");*/
         // compare sector of rq to our next element until we get where we should insert
         while (blk_rq_pos(rq) > blk_rq_pos(next)) {
-                print(KERN_NOTICE "list rq: %llu", blk_rq_pos(next));
+                /*printk(KERN_NOTICE "list rq: %llu\n", blk_rq_pos(next));*/
                 prev = next;
                 next = list_entry(next->queuelist.next, struct request, queuelist);
                 
@@ -66,12 +90,15 @@ static void sstf_add_request(struct request_queue *q, struct request *rq)
                 }
         }
 
-        print(KERN_NOTICE "Adding request rq: %llu, after prev: %llu", 
-                        blk_rq_pos(rq),
-                        blk_rq_pos(prev));
+        /*printk(KERN_NOTICE "Adding request rq: %llu, after prev: %llu\n", */
+                        /*blk_rq_pos(rq),*/
+                        /*blk_rq_pos(prev));*/
 
         // Adds after prev and automatically finishes
         list_add(&rq->queuelist, &prev->queuelist);
+        printk(KERN_NOTICE "AFTER ADD\n");
+        print_list(q);
+        printk("\n");
     }
 }
 
