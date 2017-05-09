@@ -40,11 +40,15 @@ static int sstf_dispatch(struct request_queue *q, int force)
 
 	if (!list_empty(&nd->queue)) {
                 struct request *rq;
-
                 printk(KERN_NOTICE "BEFORE DISPATCH\n");
                 printk(KERN_NOTICE "HEAD: %llu\n", nd->head);
                 print_list(q);
+
                 rq = list_entry(nd->queue.next, struct request, queuelist);
+                while (blk_rq_pos(rq) < nd->head) {
+                        rq = list_entry(nd->queue.next, struct request, queuelist);
+                        nd->head = blk_rq_pos(rq) + blk_rq_sectors(rq);
+                }       
                 list_del_init(&rq->queuelist);
                 nd->head = blk_rq_pos(rq) + blk_rq_sectors(rq);
 
