@@ -6,7 +6,7 @@ import sys, os
 from string import ascii_letters
 
 # import choice (to choose random letters) and randint (for random integers)
-from random import randint, sample
+from random import randint, sample, shuffle
 
 n = int(sys.argv[1])
 
@@ -28,3 +28,13 @@ for i in range(1, n+1):
     randstr = randomstring()
     f.write(randstr + '\n')
     f.close()
+
+filelist = []
+filelist = os.listdir(".")
+shuffle(filelist)
+
+with open('concatenated', 'w') as outfile:
+    for f in filelist:
+        with open(f) as infile:
+            for line in infile:
+                outfile.write(line)
