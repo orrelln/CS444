@@ -85,27 +85,25 @@ static void sstf_add_request(struct request_queue *q, struct request *rq)
                 list_add(&rq->queuelist, &nd->queue);
         } else { // list isnt empty so we need to search where to place
                 struct request *next, *prev;
+                struct list_head *cursor;
+                int end = 1;
 
-                // assign next and prev
+                printk(KERN_NOTICE "BEFORE DISPATCH\n");
+                printk(KERN_NOTICE "HEAD: %llu\n", nd->head);
+                print_list(q);
+
                 next = list_entry(nd->queue.next, struct request, queuelist);
-                prev = next;
-                
-                /*printk(KERN_NOTICE "iterating request list...");*/
-                // compare sector of rq to our next element until we get where we should insert
-                while (blk_rq_pos(rq) > blk_rq_pos(next)) {
-                        /*printk(KERN_NOTICE "list rq: %llu\n", blk_rq_pos(next));*/
+                list_for_each(cursor, &nd->queue) {
                         prev = next;
-                        next = list_entry(next->queuelist.next, struct request, queuelist);
-                        
-                        // prev > next so we looped to circular 
-                        if (blk_rq_pos(prev) >= blk_rq_pos(next)) {
+                        next = list_entry(cursor, struct request, queuelist);
+                        if (blk_rq_pos(next) > blk_rq_pos(rq)) {
+                                end = 0;
                                 break;
                         }
                 }
-
-                /*printk(KERN_NOTICE "Adding request rq: %llu, after prev: %llu\n", */
-                                /*blk_rq_pos(rq),*/
-                                /*blk_rq_pos(prev));*/
+                if (end == 1) {
+                        prev = next;
+                }
 
                 // Adds after prev and automatically finishes
                 list_add(&rq->queuelist, &prev->queuelist);
