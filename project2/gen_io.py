@@ -33,6 +33,8 @@ filelist = []
 filelist = os.listdir(".")
 shuffle(filelist)
 
+# The following was sourced from:
+# http://stackoverflow.com/questions/13613336/python-concatenate-text-files
 with open('concatenated', 'w') as outfile:
     for f in filelist:
         with open(f) as infile:
