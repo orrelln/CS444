@@ -19,21 +19,123 @@ class Node:
     def setNext(self,newnext):
         self.next = newnext
 
+class LinkedList:
+    def __init__(self):
+        self.head = None
+
+	def add(self,item):
+		temp = Node(item)
+		temp.setNext(self.head)
+		self.head = temp
+
+	def search(self,item):
+		current = self.head
+		found = False
+		while current != None and not found:
+			if current.getData() == item:
+				found = True
+			else:
+				current = current.getNext()
+
+		return found
+
+	def remove(self,item):
+		current = self.head
+		previous = None
+		found = False
+		while not found:
+			if current.getData() == item:
+				found = True
+			else:
+				previous = current
+				current = current.getNext()
+
+		if previous == None:
+			self.head = current.getNext()
+		else:
+			previous.setNext(current.getNext())
+
 
 # define global linked list
+globList = LinkedList()
+
+notSearch = Lock()
+notInsert = Lock()
+searchTempLock = Lock()
+insertTempLock = Lock()
+insertCompLock = Lock()
+
+numSearchers = 0
+numInserters = 0
 
 
 def main():
-    pass
+	random.seed()
+	data = random.randint(0,10)
+	i = Process(target=inserter, args=(data,))
+	i.start()
+	data = random.randint(0,10)
+	i = Process(target=inserter, args=(data,))
+	data = random.randint(0,10)
+	i = Process(target=inserter, args=(data,))
+	data = random.randint(0,10)
+	i = Process(target=inserter, args=(data,))
+	data = random.randint(0,10)
+	i = Process(target=inserter, args=(data,))
+	data = random.randint(0,10)
+	i = Process(target=inserter, args=(data,))
 
-def inserter():
-    pass
+def inserter(data):
+	global globList
+	insertTempLock.acquire()
+	numInserters += 1
+	if numInserters == 1:
+		notSearch.acquire()
+	insertTempLock.release()
 
-def searcher():
-    pass
+	insertCompLock.acquire()
+
+	# insert here
+	print "inserting"
+	globList.add(data)
+
+	insertCompLock.release()
+
+	insertTempLock.acquire()
+	numInserters -= 1
+	if numInserters == 0:
+		notSearch.release()
+	insertTempLock.release()
+
+def searcher(data):
+	global globList
+	searchTempLock.acquire()
+	numSearchers += 1
+	if numSearchers == 1:
+		notSearch.acquire()
+	searchTempLock.release()
+	# search here
+	print "searching"
+	globList.search(data)
+
+	searchTempLock.acquire()
+	numSearchers -= 1
+	if numSearchers == 0:
+		notSearch.release()
+	searchTempLock.release()
 
 def deleter():
-    pass
+	global globList
+	notInsert.acquire()
+	notSearch.acquire()
+
+	# delete
+	print "deleting"
+	globList.remove(data)
+	
+	
+	notInsert.release()
+	notSearch.release()
 
 
 
