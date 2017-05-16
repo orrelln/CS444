@@ -20,8 +20,21 @@ class Node:
         self.next = newnext
 
 
+# define global linked list
+
+
 def main():
     pass
+
+def inserter():
+    pass
+
+def searcher():
+    pass
+
+def deleter():
+    pass
+
 
 
 if __name__ == __main__:
