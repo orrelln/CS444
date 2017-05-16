@@ -1,0 +1,122 @@
+\documentclass[draftclsnofoot, onecolumn]{IEEEtran}
+%% Language and font encodings
+\usepackage[english]{babel}
+\usepackage[T1]{fontenc}
+\usepackage{longtable}
+\usepackage{listings}
+\usepackage{courier}
+\usepackage{color}
+
+
+%% Sets page size and margins
+\usepackage[letterpaper, margin=0.75in]{geometry}
+
+\definecolor{mygreen}{rgb}{0,0.6,0}
+\definecolor{mygray}{rgb}{0.5,0.5,0.5}
+\definecolor{mymauve}{rgb}{0.58,0,0.83}
+
+\lstset{ %
+  backgroundcolor=\color{white},   % choose the background color
+  basicstyle=\footnotesize,        % size of fonts used for the code
+  breaklines=true,                 % automatic line breaking only at whitespace
+  captionpos=b,                    % sets the caption-position to bottom
+  commentstyle=\color{mygreen},    % comment style
+  escapeinside={\%*}{*)},          % if you want to add LaTeX within your code
+  keywordstyle=\color{blue},       % keyword style
+  stringstyle=\color{mymauve},     % string literal style
+  frame=L
+}
+
+%% Useful packages
+\makeindex
+
+\begin{document}
+%%\maketitle
+\begin{titlepage}
+	\pagenumbering{gobble}
+		\centering
+        \scshape{
+        	\huge Operating Systems II \par
+            {\large\today}\par
+            {\large Spring 2017}\par
+            \vspace{.5in}
+            \textbf{\Huge Project 2: I/O Elevators}\par
+			\vfill
+            {\Large Michael Lee, Nicholas Orrell, Aileen Thai}
+            \vspace{20pt}
+		}
+\begin{abstract}
+%Insert abstract here
+I/O schedulers are an important aspect of any non-random accessible system. They are used to ensure that efficient block I/O operations occur through methods such as Shortest Seek Time First and Elevator algorithms. We will be covering and creating a specific scheduler, C-LOOK, that implements an Elevator algorithm and is based on the default Linux NOOP scheduler. 
+\end{abstract}
+\end{titlepage}
+\newpage
+\pagenumbering{arabic}
+
+\section{Design}
+To implement the SSTF algorithms and create the C-LOOK I/O scheduler, we must start with the existing Linux NOOP scheduler. Our design is rather simple: insert requests into the request queue in order of disk section, and always service the next request in the queue. As the queue is a doubly linked list, we will always avoid starvation.
+
+\section{Git Log}
+\begin{center}
+\begin{tabular} { |c|c|l|c|}
+    \hline
+\bf Author & \bf Date & \bf Message \\ \hline
+Aileen & 2017-04-26 & Initial commit for project 2 \\ \hline
+Aileen & 2017-04-26 & Merge branch 'master' of github.com:orrelln/CS444 \\ \hline
+willmichael & 2017-05-02 & concurrency 2 initial commit \\ \hline
+willmichael & 2017-05-02 & Basic implmentation of the problem down after initial testing... \\ \hline
+willmichael & 2017-05-02 & moving concurrency 2 into the correct place \\ \hline
+willmichael & 2017-05-02 & philosopher names \\ \hline
+willmichael & 2017-05-02 & copy noop files we need to modify, from server kernel to git directory \\ \hline
+orrelln & 2017-05-03 & Update README.md \\ \hline
+Aileen & 2017-05-03 & Copy noop\_sched into sstf\_sched \\ \hline
+Aileen & 2017-05-03 & Merge branch 'master' of github.com:orrelln/CS444 \\ \hline
+willmichael & 2017-05-03 & noop to sstf renamed \\ \hline
+willmichael & 2017-05-03 & Add request, needs testing \\ \hline
+willmichael & 2017-05-03 & Fix location and added a break for circular linked list \\ \hline
+Aileen & 2017-05-03 & Modify dispatch, set head to 0 in init \\ \hline
+Nicholas Orrell & 2017-05-05 & Fix minor errors and ensure style guide \\ \hline
+willmichael & 2017-05-08 & possible code fix \\ \hline
+willmichael & 2017-05-08 & debugging the scheduler \\ \hline
+Nicholas Orrell & 2017-05-08 & Added end bracket \\ \hline
+Aileen & 2017-05-08 & Add IEEE file \\ \hline
+willmichael & 2017-05-08 & 80 char \\ \hline
+willmichael & 2017-05-08 & Merge branch 'master' of https://github.com/orrelln/CS444 \\ \hline
+willmichael & 2017-05-08 & dispatch comment \\ \hline
+Aileen & 2017-05-08 & Python script that creates test\_dir and files \\ \hline
+Aileen & 2017-05-08 & 	Modify python script \\ \hline
+Aileen & 2017-05-08 & 	Add stackoverlow source link \\ \hline
+Nicholas Orrell & 2017-05-08 & 	Added tex and makefile \\ \hline
+Aileen & 2017-05-08 & 	Add patch
+\\\hline
+\end{tabular}
+\end{center}
+
+\section{Work Log}
+Nicholas Orrell: For this project, I worked a lot on determining how the schedulers worked on a lower level and how we could implement the C-LOOK I/O scheduler. I also did debugging, structuring the code to ensure we pass Linux Kernel guidelines, and the majority of the write up.
+
+Aileen Thai: For project 2, I modified Kconfig.iosched as well as created a bash script that sourced the kernel env file and ran the qemu command with the correct flags and port. I also wrote a python script that creates a test\_dir and writes strings of random characters to a (user-specified) number of files.  
+
+Michael Lee: For this project I implemented the concurrency 2 portion of the assignment, and wrote the request\_add for our sstf-scheduler. I helped with the setting up of the scheduler in our Linux VM, and wrote most of the testing for our sstf scheduler.
+
+\section{Questions}
+
+\subsection{What do you think the main point of this assignment is?}
+The main point of this assignment is to get experience modifying the kernel and applying a patch. The way we achieved it was by understanding elevator algorithms and I/O schedulers.
+
+\subsection{How did you personally approach the problem? Design decisions, algorithm, etc.}
+Our group approached this problem initially by looking through pages of information of elevator algorithms and I/O scheduling in Linux. Once we got the abstract idea of the C-LOOK and LOOK I/O schedulers, we looked into the NOOP I/O scheduler functions and various structs utilized. We chose to go with C-LOOK as it seemed to be more intuitive than LOOK and had less overhead. Our implementation involved major changes with add and dispatch. We rewrote add to order the requests based on their location in storage. Dispatch was rewritten to ensure that the first request larger than the disk head is dispatched every time. However, if there is no larger request, then the request queue should select the first request on the queue.
+
+\subsection{How did you ensure your solution was correct? Testing details, for instance.}
+To ensure our solution was correct, we wrote a testing script along with print statements detailing the current list of requests waiting to be dispatched. Here is the mentioned Python script:
+
+\begin{center}
+\lstinputlisting[caption=I/O test with reads and writes, language=python]{gen_io.py}
+\end{center}
+This script, when provided a large enough value, will ensure multiple requests are added before dispatching and that the C-LOOK I/O scheduler is functional.
+\subsection{What did you learn?}
+From this assignment, we learned that the Linux kernel is intricate and huge in scope. As there is a lot of material to cover, we researched and gained a more thorough understanding of schedulers and their structure through the Linux documentation.
+
+
+
+\end{document}
