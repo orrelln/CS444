@@ -1,8 +1,12 @@
 from multiprocessing import Process, Lock, Manager
 # from threading import Thread, Lock
 
+import sys
+
 import random
 import time
+
+from multiprocessing.managers import BaseManager
 
 # http://interactivepython.org/courselib/static/pythonds/BasicDS/ImplementinganUnorderedListLinkedLists.html
 
@@ -59,6 +63,25 @@ class LinkedList:
         else:
             previous.setNext(current.getNext())
 
+	def size(self):
+		current = self.head
+		count = 0
+		while current != None:
+			count = count + 1
+			current = current.getNext()
+		return count
+
+    def printList(self):
+        current = self.head
+        sys.stdout.write("PRINTING LIST STATE: ")
+        while current != None:
+            sys.stdout.write(str(self.head.getData()) + ", ")
+            sys.stdout.flush()
+            current = current.getNext()
+        sys.stdout.write("\n")
+        sys.stdout.flush()
+        
+
 
 # define global linked list
 # globList = LinkedList()
@@ -69,32 +92,32 @@ searchTempLock = Lock()
 insertTempLock = Lock()
 insertCompLock = Lock()
 
-# numSearchers = 0
-# numInserters = 0
 
 manager = Manager()
 numSearchers = manager.Value('i',0)
 numInserters = manager.Value('i',0)
-linkedList = manager.list()
-linkedList.append(LinkedList())
+
+# Creation of linkedlist manager to share data between processes
+class MyManager(BaseManager):
+    pass
+
+MyManager.register('link', LinkedList)
+man = MyManager()
+man.start()
+linkedList = man.link()
 
 def main():
     random.seed()
-    # i = Thread(target=inserter)
-    # i.start()
 
-    # s = Thread(target=searcher)
-    # s.start()
+    # global linkedList
+    # linkedList.add(0)
+    # linkedList.add(1)
+    # linkedList.add(2)
+    # linkedList.add(3)
 
-    # s1 = Thread(target=searcher)
-    # s1.start()
-
-    # d = Thread(target=deleter)
-    # d.start()
-    # i.join()
-    # s.join()
-    # s1.join()
-    # d.join()
+    # linkedList.remove(3)
+    # if linkedList.search(4):
+        # linkedList.remove(4)
 
 
     i = Process(target=inserter)
@@ -117,49 +140,55 @@ def main():
 
 def inserter():
     while(1):
-        global LinkedList
+        global linkedList
         global numInserters
         insertTempLock.acquire()
+
         numInserters.value += 1
+        idInsert = numInserters.value
         if numInserters.value == 1:
             notSearch.acquire()
+
         insertTempLock.release()
-
         insertCompLock.acquire()
-        # insert here
-        print "inserting"
 
-        data = random.randint(0,10)
-        LinkedList[0].add(data)
-        time.sleep(2.0)
+        # insert here
+        print "inserting " + str(idInsert)
+        linkedList.add(idInsert)
+        linkedList.printList()
+        time.sleep(5.0)
         print "end inserting"
+        print
 
         insertCompLock.release()
         insertTempLock.acquire()
+
         numInserters.value -= 1
         if numInserters.value == 0:
             notSearch.release()
+
         insertTempLock.release()
 
 def searcher():
     while(1):
-        global LinkedList
+        global linkedList
         global numSearchers
         searchTempLock.acquire()
+
         numSearchers.value += 1
-        print "searcher " + str(numSearchers)
+        idSearcher = numSearchers.value
         if numSearchers.value == 1:
             notSearch.acquire()
-            print "not search lock acquired"
+
         searchTempLock.release()
 
         # search here
-        print "searching"
-        data = random.randint(0,10)
-        # globList.search(data)
-        LinkedList[0].search(data)
+        print "searching for " + str(idSearcher)
+        linkedList.printList()
+        print "Found " + str(linkedList.search(idSearcher))
         time.sleep(2.0)
         print "end searching"
+        print
 
         searchTempLock.acquire()
         numSearchers.value -= 1
@@ -169,16 +198,23 @@ def searcher():
 
 def deleter():
     while(1):
-        global LinkedList
+        global linkedList
         notInsert.acquire()
         notSearch.acquire()
 
         # delete
-        print "deleting"
         data = random.randint(0,10)
-        # globList.remove(data)
+        print "attempting to delete " + str(data)
+        linkedList.printList()
+        if linkedList.search(data):
+            linkedList.remove(data)
+            print "successfully deleted"
+            linkedList.printList()
+        else:
+            print "item not found"
         time.sleep(2.0)
         print "end deleting"
+        print
 
         notInsert.release()
         notSearch.release()
