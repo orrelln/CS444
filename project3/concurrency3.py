@@ -1,4 +1,8 @@
-from multiprocessing import Process, Lock
+from multiprocessing import Process, Lock, Manager
+# from threading import Thread, Lock
+
+import random
+import time
 
 # http://interactivepython.org/courselib/static/pythonds/BasicDS/ImplementinganUnorderedListLinkedLists.html
 
@@ -23,41 +27,41 @@ class LinkedList:
     def __init__(self):
         self.head = None
 
-	def add(self,item):
-		temp = Node(item)
-		temp.setNext(self.head)
-		self.head = temp
+    def add(self,item):
+        temp = Node(item)
+        temp.setNext(self.head)
+        self.head = temp
 
-	def search(self,item):
-		current = self.head
-		found = False
-		while current != None and not found:
-			if current.getData() == item:
-				found = True
-			else:
-				current = current.getNext()
+    def search(self,item):
+        current = self.head
+        found = False
+        while current != None and not found:
+            if current.getData() == item:
+                found = True
+            else:
+                current = current.getNext()
 
-		return found
+        return found
 
-	def remove(self,item):
-		current = self.head
-		previous = None
-		found = False
-		while not found:
-			if current.getData() == item:
-				found = True
-			else:
-				previous = current
-				current = current.getNext()
+    def remove(self,item):
+        current = self.head
+        previous = None
+        found = False
+        while not found:
+            if current.getData() == item:
+                found = True
+            else:
+                previous = current
+                current = current.getNext()
 
-		if previous == None:
-			self.head = current.getNext()
-		else:
-			previous.setNext(current.getNext())
+        if previous == None:
+            self.head = current.getNext()
+        else:
+            previous.setNext(current.getNext())
 
 
 # define global linked list
-globList = LinkedList()
+# globList = LinkedList()
 
 notSearch = Lock()
 notInsert = Lock()
@@ -65,79 +69,121 @@ searchTempLock = Lock()
 insertTempLock = Lock()
 insertCompLock = Lock()
 
-numSearchers = 0
-numInserters = 0
+# numSearchers = 0
+# numInserters = 0
 
+manager = Manager()
+numSearchers = manager.Value('i',0)
+numInserters = manager.Value('i',0)
+linkedList = manager.list()
+linkedList.append(LinkedList())
 
 def main():
-	random.seed()
-	data = random.randint(0,10)
-	i = Process(target=inserter, args=(data,))
-	i.start()
-	data = random.randint(0,10)
-	i = Process(target=inserter, args=(data,))
-	data = random.randint(0,10)
-	i = Process(target=inserter, args=(data,))
-	data = random.randint(0,10)
-	i = Process(target=inserter, args=(data,))
-	data = random.randint(0,10)
-	i = Process(target=inserter, args=(data,))
-	data = random.randint(0,10)
-	i = Process(target=inserter, args=(data,))
+    random.seed()
+    # i = Thread(target=inserter)
+    # i.start()
 
-def inserter(data):
-	global globList
-	insertTempLock.acquire()
-	numInserters += 1
-	if numInserters == 1:
-		notSearch.acquire()
-	insertTempLock.release()
+    # s = Thread(target=searcher)
+    # s.start()
 
-	insertCompLock.acquire()
+    # s1 = Thread(target=searcher)
+    # s1.start()
 
-	# insert here
-	print "inserting"
-	globList.add(data)
+    # d = Thread(target=deleter)
+    # d.start()
+    # i.join()
+    # s.join()
+    # s1.join()
+    # d.join()
 
-	insertCompLock.release()
 
-	insertTempLock.acquire()
-	numInserters -= 1
-	if numInserters == 0:
-		notSearch.release()
-	insertTempLock.release()
+    i = Process(target=inserter)
+    i.start()
 
-def searcher(data):
-	global globList
-	searchTempLock.acquire()
-	numSearchers += 1
-	if numSearchers == 1:
-		notSearch.acquire()
-	searchTempLock.release()
-	# search here
-	print "searching"
-	globList.search(data)
+    s = Process(target=searcher)
+    s.start()
 
-	searchTempLock.acquire()
-	numSearchers -= 1
-	if numSearchers == 0:
-		notSearch.release()
-	searchTempLock.release()
+    s1 = Process(target=searcher)
+    s1.start()
+
+    data = random.randint(0,10)
+    d = Process(target=deleter)
+    d.start()
+
+    i.join()
+    s.join()
+    s1.join()
+    d.join()
+
+def inserter():
+    while(1):
+        global LinkedList
+        global numInserters
+        insertTempLock.acquire()
+        numInserters.value += 1
+        if numInserters.value == 1:
+            notSearch.acquire()
+        insertTempLock.release()
+
+        insertCompLock.acquire()
+        # insert here
+        print "inserting"
+
+        data = random.randint(0,10)
+        LinkedList[0].add(data)
+        time.sleep(2.0)
+        print "end inserting"
+
+        insertCompLock.release()
+        insertTempLock.acquire()
+        numInserters.value -= 1
+        if numInserters.value == 0:
+            notSearch.release()
+        insertTempLock.release()
+
+def searcher():
+    while(1):
+        global LinkedList
+        global numSearchers
+        searchTempLock.acquire()
+        numSearchers.value += 1
+        print "searcher " + str(numSearchers)
+        if numSearchers.value == 1:
+            notSearch.acquire()
+            print "not search lock acquired"
+        searchTempLock.release()
+
+        # search here
+        print "searching"
+        data = random.randint(0,10)
+        # globList.search(data)
+        LinkedList[0].search(data)
+        time.sleep(2.0)
+        print "end searching"
+
+        searchTempLock.acquire()
+        numSearchers.value -= 1
+        if numSearchers.value == 0:
+            notSearch.release()
+        searchTempLock.release()
 
 def deleter():
-	global globList
-	notInsert.acquire()
-	notSearch.acquire()
+    while(1):
+        global LinkedList
+        notInsert.acquire()
+        notSearch.acquire()
 
-	# delete
-	print "deleting"
-	globList.remove(data)
-	
-	
-	notInsert.release()
-	notSearch.release()
+        # delete
+        print "deleting"
+        data = random.randint(0,10)
+        # globList.remove(data)
+        time.sleep(2.0)
+        print "end deleting"
+
+        notInsert.release()
+        notSearch.release()
 
 
 
-if __name__ == __main__:
+if __name__ == "__main__":
     main()
