@@ -18,6 +18,7 @@
 #include <linux/genhd.h>
 #include <linux/blkdev.h>
 #include <linux/hdreg.h>
+#include <linux/crypto.h>
 
 MODULE_LICENSE("Dual BSD/GPL");
 static char *Version = "1.4";
@@ -50,6 +51,12 @@ static struct sbd_device {
 	struct gendisk *gd;
 } Device;
 
+struct crypto_cipher *ciph;
+static char *key = "4204206942042069";
+module_param(key, charp, 0664);
+static int len = 16;
+module_param(len, int, 0664);
+
 /*
  * Handle an I/O request.
  */
@@ -62,10 +69,27 @@ static void sbd_transfer(struct sbd_device *dev, sector_t sector,
 		printk (KERN_NOTICE "sbd: Beyond-end write (%ld %ld)\n", offset, nbytes);
 		return;
 	}
-	if (write)
-		memcpy(dev->data + offset, buffer, nbytes);
-	else
-		memcpy(buffer, dev->data + offset, nbytes);
+	if (write) {
+           
+           for (i = 0; i < nbytes; i += crypto_cipher_blocksize(ciph)) {
+              crypto_cipher_encrypt_one(
+                    ciph,
+                    dev->data + offset + i,
+                    buffer + i
+                    );
+           }
+
+         } else {
+            
+            for (i = 0; i < nbytes; i += crypto_cipher_blocksize(ciph)) {
+              crypto_cipher_decrypt_one(
+                    ciph,
+                    buffer + i,
+                    dev->data + offset + i,
+                    );
+            }
+
+         }
 }
 
 static void sbd_request(struct request_queue *q) {
@@ -153,6 +177,11 @@ static int __init sbd_init(void) {
 	Device.gd->queue = Queue;
 	add_disk(Device.gd);
 
+        /* 
+         * Set up crypto
+         */
+        ciph = crypto_alloc_cipher("aes", 0, 0);
+
 	return 0;
 
 out_unregister:
@@ -169,6 +198,8 @@ static void __exit sbd_exit(void)
 	unregister_blkdev(major_num, "sbd");
 	blk_cleanup_queue(Queue);
 	vfree(Device.data);
+
+        crypto_free_cipher(ciph);
 }
 
 module_init(sbd_init);
