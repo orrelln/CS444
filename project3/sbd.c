@@ -21,7 +21,7 @@
 #include <linux/crypto.h>
 
 MODULE_LICENSE("Dual BSD/GPL");
-static char *Version = "1.4";
+//static char *Version = "1.4";
 
 static int major_num = 0;
 module_param(major_num, int, 0);
@@ -53,9 +53,9 @@ static struct sbd_device {
 
 struct crypto_cipher *ciph;
 static char *key = "4204206942042069";
-module_param(key, charp, 0664);
+module_param(key, charp, 0644);
 static int len = 16;
-module_param(len, int, 0664);
+module_param(len, int, 0644);
 
 /*
  * Handle an I/O request.
@@ -64,31 +64,56 @@ static void sbd_transfer(struct sbd_device *dev, sector_t sector,
 		unsigned long nsect, char *buffer, int write) {
 	unsigned long offset = sector * logical_block_size;
 	unsigned long nbytes = nsect * logical_block_size;
+        u8 *enc_pointer;
+        enc_pointer = dev->data + offset;
 
-	if ((offset + nbytes) > dev->size) {
+	
+        if ((offset + nbytes) > dev->size) {
 		printk (KERN_NOTICE "sbd: Beyond-end write (%ld %ld)\n", offset, nbytes);
 		return;
 	}
+        
 	if (write) {
+                int i;
+
+                printk (KERN_NOTICE "WRITING\n");
+                printk (KERN_NOTICE "UNENCRYPTED DATA: ");
+                for (i = 0; i < nbytes; i++) {
+                        printk (KERN_NOTICE "%u", buffer[i]);
+                }    
+
+                for (i = 0; i < nbytes; i += crypto_cipher_blocksize(ciph)) {
+                        crypto_cipher_encrypt_one(
+                                ciph,
+                                dev->data + offset + i,
+                                buffer + i
+                        );
+                }
            
-           for (i = 0; i < nbytes; i += crypto_cipher_blocksize(ciph)) {
-              crypto_cipher_encrypt_one(
-                    ciph,
-                    dev->data + offset + i,
-                    buffer + i
-                    );
-           }
-
+                printk (KERN_NOTICE "\nENCRYPTED DATA: ");
+                for (i = 0; i < nbytes; i++) {
+                        printk (KERN_NOTICE "%u", (unsigned) *enc_pointer++);
+                }
          } else {
-            
-            for (i = 0; i < nbytes; i += crypto_cipher_blocksize(ciph)) {
-              crypto_cipher_decrypt_one(
-                    ciph,
-                    buffer + i,
-                    dev->data + offset + i,
-                    );
-            }
+                int i;
+                printk (KERN_NOTICE "READING\n");
+                printk (KERN_NOTICE "ENCRYPTED DATA: ");
+                for (i = 0; i < nbytes; i++) {
+                        printk (KERN_NOTICE "%u", (unsigned) *enc_pointer++);
+                }
 
+                for (i = 0; i < nbytes; i += crypto_cipher_blocksize(ciph)) {
+                        crypto_cipher_decrypt_one(
+                                ciph,
+                                buffer + i,
+                                dev->data + offset + i
+                        );
+                }
+                
+                printk (KERN_NOTICE "\nUNENCRYPTED DATA: ");
+                for (i = 0; i < nbytes; i++) {
+                        printk (KERN_NOTICE "%u", buffer[i]);
+                }    
          }
 }
 
@@ -168,6 +193,13 @@ static int __init sbd_init(void) {
 	Device.gd = alloc_disk(16);
 	if (!Device.gd)
 		goto out_unregister;
+        
+        /* 
+         * Set up crypto
+         */
+        ciph = crypto_alloc_cipher("aes", 0, 0);
+
+
 	Device.gd->major = major_num;
 	Device.gd->first_minor = 0;
 	Device.gd->fops = &sbd_ops;
@@ -177,12 +209,7 @@ static int __init sbd_init(void) {
 	Device.gd->queue = Queue;
 	add_disk(Device.gd);
 
-        /* 
-         * Set up crypto
-         */
-        ciph = crypto_alloc_cipher("aes", 0, 0);
-
-	return 0;
+        return 0;
 
 out_unregister:
 	unregister_blkdev(major_num, "sbd");
