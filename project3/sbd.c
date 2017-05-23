@@ -76,10 +76,10 @@ static void sbd_transfer(struct sbd_device *dev, sector_t sector,
 	if (write) {
                 int i;
 
-                printk (KERN_NOTICE "WRITING\n");
+                printk (KERN_NOTICE "\nWRITING");
                 printk (KERN_NOTICE "UNENCRYPTED DATA: ");
-                for (i = 0; i < nbytes; i++) {
-                        printk (KERN_NOTICE "%u", buffer[i]);
+                for (i = 0; i < 25; i++) {
+                        printk ("%x", buffer[i]);
                 }    
 
                 for (i = 0; i < nbytes; i += crypto_cipher_blocksize(ciph)) {
@@ -90,16 +90,16 @@ static void sbd_transfer(struct sbd_device *dev, sector_t sector,
                         );
                 }
            
-                printk (KERN_NOTICE "\nENCRYPTED DATA: ");
-                for (i = 0; i < nbytes; i++) {
-                        printk (KERN_NOTICE "%u", (unsigned) *enc_pointer++);
+                printk (KERN_NOTICE "ENCRYPTED DATA: ");
+                for (i = 0; i < 25; i++) {
+                        printk ("%x", (unsigned) *enc_pointer++);
                 }
          } else {
                 int i;
-                printk (KERN_NOTICE "READING\n");
+                printk (KERN_NOTICE "\nREADING");
                 printk (KERN_NOTICE "ENCRYPTED DATA: ");
-                for (i = 0; i < nbytes; i++) {
-                        printk (KERN_NOTICE "%u", (unsigned) *enc_pointer++);
+                for (i = 0; i < 25; i++) {
+                        printk ("%x", (unsigned) *enc_pointer++);
                 }
 
                 for (i = 0; i < nbytes; i += crypto_cipher_blocksize(ciph)) {
@@ -110,9 +110,9 @@ static void sbd_transfer(struct sbd_device *dev, sector_t sector,
                         );
                 }
                 
-                printk (KERN_NOTICE "\nUNENCRYPTED DATA: ");
-                for (i = 0; i < nbytes; i++) {
-                        printk (KERN_NOTICE "%u", buffer[i]);
+                printk (KERN_NOTICE "UNENCRYPTED DATA: ");
+                for (i = 0; i < 25; i++) {
+                        printk ("%x", buffer[i]);
                 }    
          }
 }
