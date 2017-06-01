@@ -25,9 +25,11 @@ the header and link.
 
 The threshold can be set high to deal with fragmentation.
 
+This algorithm will be implemented within slob_alloc/slob_free
+
 ---
 
-### Comparing efficiency between First-Fit and Best-Fit Algorithms
+#### Comparing efficiency between First-Fit and Best-Fit Algorithms
 
 In order to compare efficiency between our two algorithms we will need to compile and 
 test the original slob.c and our best-fit slob.c algorithms onto separate VMs.
