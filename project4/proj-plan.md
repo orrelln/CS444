@@ -28,3 +28,18 @@ The threshold can be set high to deal with fragmentation.
 ---
 
 ### Comparing efficiency between First-Fit and Best-Fit Algorithms
+
+In order to compare efficiency between our two algorithms we will need to compile and 
+test the original slob.c and our best-fit slob.c algorithms onto separate VMs.
+
+Within the slob.c file we will create new system calls that output the claimed memory and the 
+free memory in order to display an accurate view of the fragmentation of our system at a given
+moment. We will run a process that allocates an arbitrarily large amount of memory for use
+and then call our system calls to display the fragmentation view.
+
+From this comparison we should be able to demostrate that our new algorithm provides
+less fragmentation than the default first-fit algorithm.
+
+
+
+
