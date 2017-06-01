@@ -25,6 +25,6 @@ the header and link.
 
 The threshold can be set high to deal with fragmentation.
 
---
+---
 
-#### Comparing efficiency between First-Fit and Best-Fit Algorithms
+### Comparing efficiency between First-Fit and Best-Fit Algorithms
