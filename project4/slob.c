@@ -92,6 +92,13 @@ struct slob_block {
 };
 typedef struct slob_block slob_t;
 
+// Keep track of the current best-fit
+struct curr_bf{
+  slob_t *curr;
+  slob_t *prev;
+  int page_diff;  // amount of difference between pages 
+};
+
 /*
  * All partially free slob pages go on these lists.
  */
@@ -211,6 +218,59 @@ static void slob_free_pages(void *b, int order)
 	free_pages((unsigned long)b, order);
 }
 
+/* Helper function to find/keep track of current best fit for the slob page */
+static void slob_check_best_fit(struct page *sp, size_t size, int align,
+struct curr_bf *curr_best){
+  // if diff is zero, found best fit
+  // else if loop and keep track of smallest diff
+  // else alloc new page, nothing is large enough
+	slob_t *prev, *cur, *aligned = 0; // keep track of pages
+	int delta = 0, amt = 0, found = 0, units = SLOB_UNITS(size);
+
+  // This top bit is the same as slob_page_alloc
+	for (prev = NULL, cur = sp->freelist; ; prev = cur, cur = slob_next(cur)) {
+		slobidx_t avail = slob_units(cur);
+
+    //  size = n + size(header)
+    //  scan free list for smallest block with nWords >= size
+    //  
+    //  if (block not found){
+    //    fail and collect garbage
+    //  }
+    //  else if (free block nWords >= b + threshold) {
+    //    split into a free and an in-use block
+    //    free block nWords = free block nWords = size(block)
+    //    in-user block nWords = size(block)
+    //    return pointer to in-use block
+    //    }
+    //  else {
+    //    unlink block from free list
+    //    return pointer to block
+    //    }
+		if (align) {
+			aligned = (slob_t *)ALIGN((unsigned long)cur, align);
+			delta = aligned - cur;
+		}
+
+    // Set amt to be equal to the size of the current block
+    amt = units + delta;
+
+    if (avail >= amt){
+        if (avail == amt){  // amount equal, best fit found
+
+        }
+        if (avail - amt < curr_best->page_diff){
+
+        }
+    } 
+
+		if (slob_last(cur))
+			return NULL;
+	}
+}
+
+//}
+
 /*
  * Allocate a slob block within a given slob_page sp.
  */
@@ -295,19 +355,42 @@ static void *slob_alloc(size_t size, gfp_t gfp, int align, int node)
 		if (sp->units < SLOB_UNITS(size))
 			continue;
 
-		/* Attempt to alloc */
-		prev = sp->list.prev;
-		b = slob_page_alloc(sp, size, align);
-		if (!b)
-			continue;
+// Check for the best slob page - move this out to helper function later
 
-		/* Improve fragment distribution and reduce our average
-		 * search time by starting our next search here. (see
-		 * Knuth vol 1, sec 2.5, pg 449) */
-		if (prev != slob_list->prev &&
-				slob_list->next != prev->next)
-			list_move_tail(slob_list, prev->next);
-		break;
+
+//  define what threshold is
+//
+//  size = n + size(header)
+//  scan free list for smallest block with nWords >= size
+//  
+//  if (block not found){
+//    fail and collect garbage
+//  }
+//  else if (free block nWords >= b + threshold) {
+//    split into a free and an in-use block
+//    free block nWords = free block nWords = size(block)
+//    in-user block nWords = size(block)
+//    return pointer to in-use block
+//    }
+//  else {
+//    unlink block from free list
+//    return pointer to block
+//    }
+
+    /* Original allocation method in slob.c */
+		///* Attempt to alloc */
+		///prev = sp->list.prev;
+		///b = slob_page_alloc(sp, size, align);
+		///if (!b)
+		///	continue;
+
+		////* Improve fragment distribution and reduce our average
+		/// * search time by starting our next search here. (see
+		/// * Knuth vol 1, sec 2.5, pg 449) */
+		///if (prev != slob_list->prev &&
+		///		slob_list->next != prev->next)
+		///	list_move_tail(slob_list, prev->next);
+		///break;
 	}
 	spin_unlock_irqrestore(&slob_lock, flags);
 
