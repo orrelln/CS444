@@ -218,58 +218,48 @@ static void slob_free_pages(void *b, int order)
 	free_pages((unsigned long)b, order);
 }
 
-/* Helper function to find/keep track of current best fit for the slob page */
+/* Helper function to find/keep track of current best fit for the slob */
 static void slob_check_best_fit(struct page *sp, size_t size, int align,
 struct curr_bf *curr_best){
-  // if diff is zero, found best fit
-  // else if loop and keep track of smallest diff
-  // else alloc new page, nothing is large enough
-	slob_t *prev, *cur, *aligned = 0; // keep track of pages
-	int delta = 0, amt = 0, found = 0, units = SLOB_UNITS(size);
+	slob_t *prev, *cur, *aligned = NULL;
+	int delta = 0, amount = 0, found = 0, units = SLOB_UNITS(size);
 
   // This top bit is the same as slob_page_alloc
 	for (prev = NULL, cur = sp->freelist; ; prev = cur, cur = slob_next(cur)) {
 		slobidx_t avail = slob_units(cur);
 
-    //  size = n + size(header)
-    //  scan free list for smallest block with nWords >= size
-    //  
-    //  if (block not found){
-    //    fail and collect garbage
-    //  }
-    //  else if (free block nWords >= b + threshold) {
-    //    split into a free and an in-use block
-    //    free block nWords = free block nWords = size(block)
-    //    in-user block nWords = size(block)
-    //    return pointer to in-use block
-    //    }
-    //  else {
-    //    unlink block from free list
-    //    return pointer to block
-    //    }
 		if (align) {
 			aligned = (slob_t *)ALIGN((unsigned long)cur, align);
 			delta = aligned - cur;
 		}
 
-    // Set amt to be equal to the size of the current block
-    amt = units + delta;
+    // Set amount to be equal to the size of the current block
+    amount = units + delta;
 
-    if (avail >= amt){
-        if (avail == amt){  // amount equal, best fit found
-
-        }
-        if (avail - amt < curr_best->page_diff){
-
-        }
+    if (avail >= amount){
+      // If available space == size of block, we've found the best fit
+      if (avail == amount){
+        curr_best->curr = curr;
+        curr_best->prev = prev;
+        found = 1;
+        break;
+      }
+      // Otherwise, calculate diff and keep track of the smallest amount
+      if (avail - amount < curr_best->page_diff){
+        curr_best->page_diff = avail - amt;
+        curr_best->curr = curr;
+        curr_best->prev = prev;
+        found = 1;
+      }
     } 
 
+    // No fit was found, so we'll need to allocate a new page
 		if (slob_last(cur))
-			return NULL;
+			break;
 	}
-}
 
-//}
+  return found;
+}
 
 /*
  * Allocate a slob block within a given slob_page sp.
