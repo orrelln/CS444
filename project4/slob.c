@@ -253,7 +253,7 @@ struct curr_bf *curr_best){
       }
     } 
 
-    // No fit was found, so we'll need to allocate a new page
+    // We've exhausted the list and no fit was found
 		if (slob_last(cur))
 			break;
 	}
@@ -323,6 +323,11 @@ static void *slob_alloc(size_t size, gfp_t gfp, int align, int node)
 	slob_t *b = NULL;
 	unsigned long flags;
 
+  struct curr_br *curr_best;
+  // We want to set the page_diff to a large value, so it doesn't seem like
+  // we've found the best fitting page before anything even happens
+  curr_best.page_diff = 32000;  // temp = 32000, but what's the max page size?
+
 	if (size < SLOB_BREAK1)
 		slob_list = &free_slob_small;
 	else if (size < SLOB_BREAK2)
@@ -345,27 +350,27 @@ static void *slob_alloc(size_t size, gfp_t gfp, int align, int node)
 		if (sp->units < SLOB_UNITS(size))
 			continue;
 
-// Check for the best slob page - move this out to helper function later
+    /* Algo plan for reference */
+    /*
+    size = n + size(header)
+    scan free list for smallest block with nWords >= size
 
+    if (block not found){
+      fail and collect garbage
+    }else if (free block nWords >= b + threshold) {
+      free block nWords = free block nWords = size(block)
+      in-user block nWords = size(block)
+      return pointer to in-use block
+    }else {
+      unlink block from free list
+      return pointer to block
+    }
+    */
 
-//  define what threshold is
-//
-//  size = n + size(header)
-//  scan free list for smallest block with nWords >= size
-//  
-//  if (block not found){
-//    fail and collect garbage
-//  }
-//  else if (free block nWords >= b + threshold) {
-//    split into a free and an in-use block
-//    free block nWords = free block nWords = size(block)
-//    in-user block nWords = size(block)
-//    return pointer to in-use block
-//    }
-//  else {
-//    unlink block from free list
-//    return pointer to block
-//    }
+    // Check for the best slob page in helper function: slob_check_best_fit
+    if (slob_check_best_fit(sp, size, align, curr_best)){
+      // do stuff
+    }
 
     /* Original allocation method in slob.c */
 		///* Attempt to alloc */
