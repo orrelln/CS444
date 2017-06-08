@@ -92,6 +92,27 @@ struct slob_block {
 };
 typedef struct slob_block slob_t;
 
+/* slob_page struct grabbed from --
+ * http://elixir.free-electrons.com/linux/v3.4.16/source/mm/slob.c
+ *
+ * "We use struct page fields to manage some slob allocation aspects,
+ *  however to avoid the horrible mess in include/linux/mm_types.h, we'll just
+ *  define our own struct page type variant here."
+ */
+stuct slob_page {
+  union {
+    struct {
+      unsigned long flags;    /* mandatory */
+      atomic_t _count;        /* mandatory */
+      slobidx_t units;        /* free units lefts in page */
+      unsigned long pad[2];
+      slob_t *free;           /* first free slob_t in page */
+      struct list_head list;  /* linked list of free pages */
+    };
+    struct page page;
+  };
+};
+
 // Keep track of the current best-fit
 struct curr_bf{
   slob_t *curr;
