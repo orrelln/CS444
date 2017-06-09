@@ -391,10 +391,8 @@ static void *slob_alloc(size_t size, gfp_t gfp, int align, int node)
   		b = slob_page_alloc(track, size, align);
     }
 
-    // Make syscalls to compare memory here?
-    //
-    //
-	struct list_head *mem_track
+    // Memory tracking
+	  struct list_head *mem_track;
     mem_track = &free_slob_small;
     list_for_each_entry(sp, mem_track, list) {
         free_bytes += sp->units;
@@ -406,7 +404,6 @@ static void *slob_alloc(size_t size, gfp_t gfp, int align, int node)
     mem_track = &free_slob_large;
     list_for_each_entry(sp, mem_track, list) {
         free_bytes += sp->units;
-
     }
 
     /* Original allocation method in slob.c follows */
