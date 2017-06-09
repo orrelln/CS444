@@ -769,6 +769,6 @@ asmlinkage long sys_get_free_slob() {
 	return free_bytes
 }
 
-asmlinkage long sys_get_used_slob() {
+/*asmlinkage long sys_get_used_slob() {
 
-}
+}*/
