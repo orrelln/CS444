@@ -264,7 +264,7 @@ struct curr_bf *curr_best){
     if (avail >= amount){
       // If available space == size of block, we've found the best fit
       if (avail == amount){
-        curr_best->curr = curr;
+        curr_best->curr = cur;
         curr_best->prev = prev;
         found = 1;
         break;
@@ -272,7 +272,7 @@ struct curr_bf *curr_best){
       // Otherwise, calculate diff and keep track of the smallest amount
       if (avail - amount < curr_best->page_diff){
         curr_best->page_diff = avail - amt;
-        curr_best->curr = curr;
+        curr_best->curr = cur;
         curr_best->prev = prev;
         found = 1;
       }
