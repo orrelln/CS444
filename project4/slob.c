@@ -338,11 +338,13 @@ static void *slob_page_alloc(struct page *sp, size_t size, int align)
  */
 static void *slob_alloc(size_t size, gfp_t gfp, int align, int node)
 {
-	struct page *sp;
+	struct slob_page *sp;
 	struct list_head *prev;
 	struct list_head *slob_list;
 	slob_t *b = NULL;
 	unsigned long flags;
+
+  struct slob_page *track;  // keeps track of current bf 
 
   struct curr_br *curr_best;
   // We want to set the page_diff to a large value, so it doesn't seem like
@@ -371,42 +373,38 @@ static void *slob_alloc(size_t size, gfp_t gfp, int align, int node)
 		if (sp->units < SLOB_UNITS(size))
 			continue;
 
-    /* Algo plan for reference */
-    /*
-    size = n + size(header)
-    scan free list for smallest block with nWords >= size
+    // Find the (current) best fit and keep track of it
+    if (slob_check_best_fit(sp, size, align, &curr_best)){
+      track = sp;
 
-    if (block not found){
-      fail and collect garbage
-    }else if (free block nWords >= b + threshold) {
-      free block nWords = free block nWords = size(block)
-      in-user block nWords = size(block)
-      return pointer to in-use block
-    }else {
-      unlink block from free list
-      return pointer to block
-    }
-    */
-
-    // Check for the best slob page in helper function: slob_check_best_fit
-    if (slob_check_best_fit(sp, size, align, curr_best)){
-      // do stuff
+      // if page_diff == 0, we've found the best possible fit
+      if (curr_best->page_diff == 0){
+        break;
+      }
     }
 
-    /* Original allocation method in slob.c */
-		///* Attempt to alloc */
-		///prev = sp->list.prev;
-		///b = slob_page_alloc(sp, size, align);
-		///if (!b)
-		///	continue;
+    if (track != NULL){
+  		b = slob_page_alloc(track, size, align);
+    }
 
-		////* Improve fragment distribution and reduce our average
-		/// * search time by starting our next search here. (see
-		/// * Knuth vol 1, sec 2.5, pg 449) */
-		///if (prev != slob_list->prev &&
-		///		slob_list->next != prev->next)
-		///	list_move_tail(slob_list, prev->next);
-		///break;
+    // Make syscalls to compare memory here?
+
+
+    /* Original allocation method in slob.c follows */
+
+		/* Attempt to alloc */
+		//prev = sp->list.prev;
+		//b = slob_page_alloc(sp, size, align);
+		//if (!b)
+		//	continue;
+
+		/* Improve fragment distribution and reduce our average
+		 * search time by starting our next search here. (see
+		 * Knuth vol 1, sec 2.5, pg 449) */
+		//if (prev != slob_list->prev &&
+		//  slob_list->next != prev->next)
+		//  list_move_tail(slob_list, prev->next);
+		//break;
 	}
 	spin_unlock_irqrestore(&slob_lock, flags);
 
