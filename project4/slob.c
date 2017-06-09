@@ -87,6 +87,10 @@ typedef s16 slobidx_t;
 typedef s32 slobidx_t;
 #endif
 
+unsigned long free_bytes = 0;
+unsigned long used_bytes = 0;
+
+
 struct slob_block {
 	slobidx_t units;
 };
@@ -388,7 +392,22 @@ static void *slob_alloc(size_t size, gfp_t gfp, int align, int node)
     }
 
     // Make syscalls to compare memory here?
+    //
+    //
+	struct list_head *mem_track
+    mem_track = &free_slob_small;
+    list_for_each_entry(sp, mem_track, list) {
+        free_bytes += sp->units;
+    }
+    mem_track = &free_slob_medium;
+    list_for_each_entry(sp, mem_track, list) {
+        free_bytes += sp->units;
+    }
+    mem_track = &free_slob_large;
+    list_for_each_entry(sp, mem_track, list) {
+        free_bytes += sp->units;
 
+    }
 
     /* Original allocation method in slob.c follows */
 
@@ -739,4 +758,17 @@ void __init kmem_cache_init(void)
 void __init kmem_cache_init_late(void)
 {
 	slab_state = FULL;
+}
+
+
+
+// Asmlinkage: - Creating as syscall to show how much memory is claimed.
+//
+
+asmlinkage long sys_get_free_slob() {
+	return free_bytes
+}
+
+asmlinkage long sys_get_used_slob() {
+
 }
