@@ -58,6 +58,9 @@
 
 #include <linux/kernel.h>
 #include <linux/slab.h>
+#include <linux/linkage.h>
+#include <linux/syscalls.h>
+#include <linux/syscall.h>
 
 #include <linux/mm.h>
 #include <linux/swap.h> /* struct reclaim_state */
@@ -271,7 +274,7 @@ struct curr_bf *curr_best){
       }
       // Otherwise, calculate diff and keep track of the smallest amount
       if (avail - amount < curr_best->page_diff){
-        curr_best->page_diff = avail - amt;
+        curr_best->page_diff = avail - amount;
         curr_best->curr = cur;
         curr_best->prev = prev;
         found = 1;
