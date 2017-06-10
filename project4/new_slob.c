@@ -368,7 +368,7 @@ static void *slob_check_best_fit(struct list_head *slob_list, size_t size, int a
       // Set amount to be equal to the size of the current block
       amount = units + delta;
 
-      if (avail >= amount && ((avail - amount) < diff)){
+      if (avail >= amount && ((avail - amount) < diff || dif == -1)){
         best = looking;
         bf_prev = prev;
         bf_cur = cur;
@@ -379,7 +379,7 @@ static void *slob_check_best_fit(struct list_head *slob_list, size_t size, int a
         diff = avail - amount;
 
         // If available space == size of block, we've found the best fit
-        if (avail == amount){
+        if (diff == 0){
           break;
         }
       }
@@ -393,8 +393,8 @@ static void *slob_check_best_fit(struct list_head *slob_list, size_t size, int a
   // If we've already keeping track of a curr best, try to find smth better
   if (best != NULL){
     /* from slob_page_alloc(...) */
-    if (delta) { /* need to fragment head to align? */
-      bf_next = slob_next(bf_curr);
+    if (bf_delta) { /* need to fragment head to align? */
+      bf_next = slob_next(bf_cur);
       set_slob(bf_aligned, bf_avail - bf_delta, bf_next);
       set_slob(bf_cur, bf_delta, bf_aligned);
 
