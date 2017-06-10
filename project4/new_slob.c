@@ -92,7 +92,6 @@ typedef s32 slobidx_t;
 unsigned long free_bytes = 0;
 unsigned long used_bytes = 0;
 
-
 struct slob_block {
 	slobidx_t units;
 };
@@ -494,7 +493,6 @@ static void *slob_alloc(size_t size, gfp_t gfp, int align, int node)
 
 		/* Attempt to alloc */
 		prev = sp->list.prev;
-		//b = slob_page_alloc(sp, size, align);
 		b = slob_check_best_fit(slob_list, size, align);
 		if (!b)
 			continue;
@@ -539,11 +537,13 @@ static void *slob_alloc(size_t size, gfp_t gfp, int align, int node)
 		set_slob(b, SLOB_UNITS(PAGE_SIZE), b + SLOB_UNITS(PAGE_SIZE));
 		set_slob_page_free(sp, slob_list);
 
-		//b = slob_page_alloc(sp, size, align);
 		b = slob_check_best_fit(slob_list, size, align);
 
 		BUG_ON(!b);
 		spin_unlock_irqrestore(&slob_lock, flags);
+
+    used_bytes++;
+
 	}
 	if (unlikely((gfp & __GFP_ZERO) && b))
 		memset(b, 0, size);
@@ -571,6 +571,9 @@ static void slob_free(void *block, int size)
 	spin_lock_irqsave(&slob_lock, flags);
 
 	if (sp->units + units == SLOB_UNITS(PAGE_SIZE)) {
+
+    used_bytes--;
+
 		/* Go directly to page allocator. Do not pass slob allocator */
 		if (slob_page_free(sp))
 			clear_slob_page_free(sp);
@@ -869,6 +872,6 @@ asmlinkage long sys_get_free_slob() {
 	return free_bytes;
 }
 
-/*asmlinkage long sys_get_used_slob() {
-
-}*/
+asmlinkage long sys_get_used_slob() {
+  return used_bytes * SLOB_UNIT(PAGE_SIZE);
+}
