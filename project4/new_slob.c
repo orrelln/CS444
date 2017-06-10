@@ -351,40 +351,42 @@ static void *slob_check_best_fit(struct list_head *slob_list, size_t size, int a
 	int delta = 0, bf_delta, amount = 0, units = SLOB_UNITS(size), diff;
 
   // need to use list_for_each_entry here?
+  list_for_each_entry(looking, slob_list, list){
   // also, check to see if page is large enough?
 
-  // This top bit is the same as slob_page_alloc
-	for (prev = NULL, cur = sp->freelist; ; prev = cur, cur = slob_next(cur)) {
-		slobidx_t avail = slob_units(cur);
+    // This top bit is the same as slob_page_alloc
+	  for (prev = NULL, cur = sp->freelist; ; prev = cur, cur = slob_next(cur)) {
+	  	slobidx_t avail = slob_units(cur);
 
-		if (align) {
-			aligned = (slob_t *)ALIGN((unsigned long)cur, align);
-			delta = aligned - cur;
-		}
+	  	if (align) {
+	  		aligned = (slob_t *)ALIGN((unsigned long)cur, align);
+	  		delta = aligned - cur;
+	  	}
 
-    // Set amount to be equal to the size of the current block
-    amount = units + delta;
+      // Set amount to be equal to the size of the current block
+      amount = units + delta;
 
-    if (avail >= amount){
-      best = looking;
-      bf_prev = prev;
-      bf_cur = cur;
+      if (avail >= amount){
+        best = looking;
+        bf_prev = prev;
+        bf_cur = cur;
 
-      bf_delta = delta;
-      bf_avail = avail; 
-      bf_aligned = aligned; 
-      diff = avail - amount;
+        bf_delta = delta;
+        bf_avail = avail; 
+        bf_aligned = aligned; 
+        diff = avail - amount;
 
-      // If available space == size of block, we've found the best fit
-      if (avail == amount){
-        break;
+        // If available space == size of block, we've found the best fit
+        if (avail == amount){
+          break;
+        }
       }
-    }
 
-    // We've exhausted the list and no fit was found
-		if (slob_last(cur))
-			break;
-	}
+      // We've exhausted the list and no fit was found
+	  	if (slob_last(cur))
+	  		break;
+	  }
+  }
 
   // If we've already keeping track of a curr best, try to find smth better
   if (best != NULL){
@@ -437,7 +439,7 @@ static void *slob_check_best_fit(struct list_head *slob_list, size_t size, int a
  */
 static void *slob_alloc(size_t size, gfp_t gfp, int align, int node)
 {
-	struct slob_page *sp;
+	struct page *sp;
 	struct list_head *prev;
 	struct list_head *slob_list;
 	slob_t *b = NULL;
@@ -862,7 +864,7 @@ void __init kmem_cache_init_late(void)
 //
 
 asmlinkage long sys_get_free_slob() {
-	return free_bytes
+	return free_bytes;
 }
 
 /*asmlinkage long sys_get_used_slob() {
