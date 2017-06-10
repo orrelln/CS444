@@ -16,6 +16,8 @@ int main(void) {
         // Print our statistics
         printf("Free Bytes: %d\n", syscall(sys_call_free));
         printf("Used Bytes: %d\n", syscall(sys_call_used));
+        printf("Fragmentation is: %f\n", 
+               (long)syscall(sys_call_free)/(long)syscall(sys_call_used));
         return 0;
 }
 
