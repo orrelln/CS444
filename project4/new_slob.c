@@ -60,7 +60,6 @@
 #include <linux/slab.h>
 #include <linux/linkage.h>
 #include <linux/syscalls.h>
-#include <linux/syscall.h>
 
 #include <linux/mm.h>
 #include <linux/swap.h> /* struct reclaim_state */
@@ -348,14 +347,17 @@ static void *slob_check_best_fit(struct list_head *slob_list, size_t size, int a
   slobidx_t bf_avail;
 
 	slob_t *prev, *cur, *aligned = NULL;
-	int delta = 0, bf_delta, amount = 0, units = SLOB_UNITS(size), diff;
+	int delta = 0, bf_delta, amount = 0, units = SLOB_UNITS(size);
+  int diff = -1;  // Set diff to be some value != 0
 
   // need to use list_for_each_entry here?
   list_for_each_entry(looking, slob_list, list){
-  // also, check to see if page is large enough?
+  // Also, check to see that the page is large enough to work with
+    if (looking->units < units)
+      continue;
 
     // This top bit is the same as slob_page_alloc
-	  for (prev = NULL, cur = sp->freelist; ; prev = cur, cur = slob_next(cur)) {
+	  for (prev = NULL, cur = looking->freelist; ; prev = cur, cur = slob_next(cur)) {
 	  	slobidx_t avail = slob_units(cur);
 
 	  	if (align) {
@@ -366,7 +368,7 @@ static void *slob_check_best_fit(struct list_head *slob_list, size_t size, int a
       // Set amount to be equal to the size of the current block
       amount = units + delta;
 
-      if (avail >= amount){
+      if (avail >= amount && ((avail - amount) < diff)){
         best = looking;
         bf_prev = prev;
         bf_cur = cur;
